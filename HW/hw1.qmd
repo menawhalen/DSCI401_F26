@@ -1,0 +1,158 @@
+---
+title: "Homework 1"
+author: "YOUR NAME HERE"
+format:
+  html:
+    self-contained: true
+editor_options: 
+  chunk_output_type: console
+---
+
+## Instructions
+
+- Answer every question directly in this `.qmd` file.
+- Written answers can go in plain text below each question — show your reasoning, not just a final number.
+- Questions with a code chunk require you to actually run code, not just report a number you found by hand.
+- When finished, **render this file to HTML** and submit the `.html` file.
+
+```{r setup, message=FALSE}
+library(tidyverse)
+library(openintro)
+data(nycflights)
+```
+
+------------------------------------------------------------------------
+
+# Part 1: Probability (OpenIntro Statistics, Ch. 3)
+
+## Q1. Probability distributions
+
+A six-sided die is rolled once.
+
+a.  Write out the probability distribution for the outcome (i.e., a table listing each possible outcome and its probability).
+b.  Confirm this distribution satisfies the three rules for a valid probability distribution.
+c.  What is the probability of rolling an even number? Show your work.
+d.  **Code:** Use R as a calculator to confirm your answer to (c) — e.g. by adding up the relevant probabilities from your table.
+
+```{r q1}
+# TODO: confirm your probability calculation
+
+```
+
+::: {.callout-note title="A quick note on independence"}
+Two events $A$ and $B$ are **independent** if knowing that one occurred tells you nothing about the probability of the other — that is, if
+
+$$P(A \mid B) = P(A)$$
+
+Concretely: compare $P(A)$ (the probability of $A$ overall, ignoring $B$) to $P(A \mid B)$ (the probability of $A$ *given* that $B$ happened). If they're the same (or very close), the events are independent. If $P(A \mid B)$ is noticeably different from $P(A)$, then knowing $B$ happened *does* change how likely $A$ is — so the events are **dependent**, not independent.
+:::
+
+
+## Q2. Conditional probability from a table
+
+A sample of 150 students was asked whether they own a car and whether they live on campus:
+
+|                    | Owns a car | No car | Total |
+|--------------------|:---:|:---:|:---:|
+| **Lives on campus** | 18 | 72 | 90 |
+| **Lives off campus** | 42 | 18 | 60 |
+| **Total**          | 60 | 90 | 150 |
+
+a.  What is the probability that a randomly selected student owns a car?
+b.  What is the probability that a student owns a car, *given* that they live off campus?
+c.  Based on (a) and (b), does car ownership appear to be independent of living situation? Explain using the definition of independence.
+d.  **Code:** Enter this table in R (as a matrix or data frame) and use `prop.table()` to confirm your answer to part (b).
+
+```{r q2}
+# TODO: enter the table and confirm the conditional probability
+
+```
+
+## Q3. Disjoint vs. independent
+
+Consider drawing one card from a standard 52-card deck.
+
+a.  Are the events "drawing a face card" (jack, queen, king) and "drawing a heart" disjoint? Explain why or why not.
+b.  Calculate $P(\text{face card OR heart})$ using the general addition rule.
+c.  **Code:** Confirm your answer to (b) using R as a calculator.
+
+```{r q3}
+# TODO: confirm your addition-rule calculation
+
+```
+
+------------------------------------------------------------------------
+
+# Part 2: Exploring Categorical Data (IMS, Ch. 4)
+
+We'll use the `nycflights` dataset from Friday's lab for the rest of this assignment.
+
+## Q4. Summarizing a categorical variable
+
+a.  Use `count()` (or `group_by()` + `summarise()`) to find how many flights each `carrier` had in this dataset.
+b.  Add a column showing each carrier's proportion of total flights.
+c.  Which carrier had the most flights? What proportion of all flights does that represent?
+
+```{r q4}
+# TODO: count flights by carrier and compute proportions
+
+```
+
+## Q5. Visualizing a categorical variable
+
+a.  Make a bar plot of `origin` (which airport flights departed from) using `ggplot2`.
+b.  In a sentence or two, describe what the plot shows — is one airport clearly busier than the others in this sample?
+
+```{r q5}
+# TODO: bar plot of origin
+
+```
+
+## Q6. Two categorical variables together
+
+Recall from Monday's lecture that we can compare row proportions in a contingency table to look for a relationship between two categorical variables.
+
+a.  Create a new variable `dep_type` that labels each flight `"on time"` if `dep_delay < 5` and `"delayed"` otherwise (hint: `mutate()` + `ifelse()`).
+b.  Make a **filled** (standardized/proportional) bar plot of `dep_type` by `origin` (hint: `geom_bar(position = "fill")`).
+c.  Based on your plot, does on-time departure rate appear to depend on which airport a flight departs from? Which airport looks best/worst?
+
+```{r q6}
+# TODO: create dep_type and make the filled bar plot
+
+```
+
+------------------------------------------------------------------------
+
+# Part 3: Exploring Numerical Data (IMS, Ch. 5)
+
+## Q7. Summary statistics
+
+a.  Use `summarise()` to compute the mean, median, standard deviation, and IQR of `dep_delay`.
+b.  Given what you found, would you expect this distribution to be symmetric or skewed? Explain your reasoning using the relationship between the mean and median from Wednesday's lecture.
+
+```{r q7}
+# TODO: compute summary statistics for dep_delay
+
+```
+
+## Q8. Visualizing shape
+
+a.  Make a histogram of `dep_delay`.
+b.  Describe the shape of the distribution: is it unimodal or multimodal? Symmetric or skewed (and if skewed, which direction)? Are there any potential outliers?
+c.  Does the shape match what you predicted in Q7(b)?
+
+```{r q8}
+# TODO: histogram of dep_delay
+
+```
+
+## Q9. Comparing a numerical variable across groups
+
+a.  Make side-by-side boxplots of `dep_delay` by `origin`.
+b.  Which origin airport has the highest *median* departure delay? Which has the most *variability* (widest spread/IQR)?
+c.  Based on what you learned about robust statistics, would you trust the mean or the median more to describe "typical" delay at each airport? Explain.
+
+```{r q9}
+# TODO: side-by-side boxplots of dep_delay by origin
+
+```
