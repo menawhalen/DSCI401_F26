@@ -1,0 +1,249 @@
+---
+title: "Exploratory Analysis"
+subtitle: "Putting categorical and numerical summaries into code"
+format:
+  html:
+    self-contained: true
+    toc: true
+editor: visual
+editor_options: 
+  chunk_output_type: console
+---
+
+## Getting started
+
+This lab picks up where our RStudio/tidyverse basics left off. This week we saw how to *describe* categorical data (bar plots, contingency tables) and numerical data (histograms, boxplots, mean/median, variance/SD) by hand and by sight. Today we'll build those same summaries and plots in code, using one dataset throughout: `nycflights`, a random sample of domestic flights departing the three major NYC airports in 2013.
+
+```{r setup, message=FALSE}
+library(tidyverse)
+library(openintro)
+data(nycflights)
+```
+
+Take a first look:
+
+```{r}
+glimpse(nycflights)
+```
+
+Some variables you'll use today:
+
+- **Categorical:** `carrier` (airline), `origin` (JFK/LGA/EWR), `dest`, `month`
+- **Numerical:** `dep_delay`, `arr_delay`, `distance`, `air_time`
+
+------------------------------------------------------------------------
+
+## Part 1: Wrangling review
+
+Before we visualize, a quick refresher on the verbs that get data into plotting shape.
+
+### Filtering
+
+Keep only the rows you care about with `filter()`. Flights headed to Los Angeles:
+
+```{r}
+lax_flights <- nycflights |>
+  filter(dest == "LAX")
+```
+
+Multiple conditions — flights to San Francisco in February:
+
+```{r}
+sfo_feb_flights <- nycflights |>
+  filter(dest == "SFO", month == 2)
+### also or |
+```
+
+### Creating new variables
+
+`mutate()` adds a column. Classify each flight as on-time or delayed:
+
+```{r}
+nycflights <- nycflights |>
+  mutate(dep_type = ifelse(dep_delay < 5, "on time", "delayed"))
+```
+
+### Grouping and summarizing
+
+`group_by()` + `summarise()` is how you get one row of stats per category:
+
+```{r}
+nycflights |>
+  group_by(origin) |>
+  summarise(
+    median_dd = median(dep_delay),
+    iqr_dd    = IQR(dep_delay),
+    n_flights = n()
+  )
+```
+
+### Sorting
+
+`arrange(desc(...))` puts the largest values first:
+
+```{r}
+nycflights |>
+  group_by(month) |>
+  summarise(mean_dd = mean(dep_delay)) |>
+  arrange(desc(mean_dd))
+```
+
+**Try it:** Which origin airport has the best on-time departure *rate* (proportion of flights with `dep_type == "on time"`)? Write the pipe chain to find out.
+
+```{r}
+nycflights %>% 
+  mutate(ontime_num = as.numeric(dep_type == "on time")) %>% 
+  group_by(origin) %>% 
+  summarise(ontime_rate = sum(ontime_num)/n(),
+            ontime_rate_mean = mean(ontime_num)) %>% 
+  arrange(desc(ontime_rate))
+
+nycflights %>% 
+  group_by(origin) %>% 
+  summarise(ontime_rate = mean(dep_type == "on time")) %>% 
+  arrange(desc(ontime_rate))
+```
+
+
+------------------------------------------------------------------------
+
+## Part 2: Visualizing — matching the plot to the variable(s)
+
+Every `ggplot2` call follows the same recipe: `ggplot(data, aes(...)) + geom_...()`. The **geom** you choose depends on how many variables you have and whether they're categorical or numerical — this is the same decision tree from Monday and Wednesday's lectures, just now in code.
+
+### One categorical variable → bar plot
+
+```{r}
+ggplot(data = nycflights, aes(x = carrier)) +
+  geom_bar()
+```
+
+Relative frequency instead of counts — divide by the total, or let `ggplot` do proportions directly:
+
+```{r}
+ggplot(data = nycflights, aes(x = carrier, y = after_stat(count) / sum(after_stat(count)))) +
+  geom_bar() +
+  ylab("proportion")
+```
+
+### One numerical variable → histogram, density, or boxplot
+
+Histogram — the shape of a single distribution:
+
+```{r}
+ggplot(data = nycflights, aes(x = dep_delay)) +
+  geom_histogram()
+```
+
+Binwidth changes the story (recall Wednesday's discussion of bin width):
+
+```{r}
+ggplot(data = nycflights, aes(x = dep_delay)) +
+  geom_histogram(binwidth = 15)
+```
+
+Density plot — a smoothed version of the histogram:
+
+```{r}
+ggplot(data = nycflights, aes(x = dep_delay)) +
+  geom_density()
+```
+
+Boxplot — center, spread, and outliers at a glance:
+
+```{r}
+ggplot(data = nycflights, aes(x = dep_delay)) +
+  geom_boxplot()
+```
+
+### Two categorical variables → stacked or grouped bar plot
+
+Is on-time performance related to which airport you fly out of?
+
+```{r}
+ggplot(data = nycflights, aes(x = origin, fill = dep_type)) +
+  geom_bar()
+```
+
+As proportions instead of counts (a **standardized/filled** bar plot — same idea as the row proportions we calculated by hand Monday):
+
+```{r}
+ggplot(data = nycflights, aes(x = origin, fill = dep_type)) +
+  geom_bar(position = "fill") +
+  ylab("proportion")
+```
+
+Side-by-side instead of stacked:
+
+```{r}
+ggplot(data = nycflights, aes(x = origin, fill = dep_type)) +
+  geom_bar(position = "dodge")
+```
+
+### One numerical + one categorical → side-by-side boxplots
+
+Do departure delays vary by origin airport?
+
+```{r}
+ggplot(data = nycflights, aes(x = origin, y = dep_delay)) +
+  geom_boxplot()
+```
+
+### Two numerical variables → scatterplot
+
+Does flight distance predict air time?
+
+```{r}
+ggplot(data = nycflights, aes(x = distance, y = air_time)) +
+  geom_point()
+```
+
+Add a trend line to see the relationship more clearly:
+
+```{r}
+ggplot(data = nycflights, aes(x = distance, y = air_time)) +
+  geom_point() +
+  geom_smooth(method = "loess", se = FALSE)
+```
+
+### Bonus: splitting a plot by a third variable (faceting)
+
+If you want to see the distance/air-time relationship separately for each origin airport, instead of coloring points you can facet into small multiples:
+
+```{r}
+ggplot(data = nycflights, aes(x = distance, y = air_time)) +
+  geom_point() +
+  geom_smooth() +
+  facet_wrap(~ origin)
+
+ggplot(data = nycflights, aes(x = distance, y = air_time, color = origin)) +
+  geom_point() +
+  geom_smooth() 
+```
+
+------------------------------------------------------------------------
+
+## Part 3: In-class exercise
+
+Using `nycflights`, answer the following. For each, decide what type of variable(s) you have first — that tells you what plot to reach for.
+
+1.  Make a plot showing the distribution of `arr_delay` for flights **only** headed to `"ORD"`. Describe the shape (modality, skew, outliers).
+
+```{r}
+nycflights %>% 
+  filter(dest == "ORD") %>% 
+  ggplot(aes(x = arr_delay)) +
+  geom_histogram() 
+
+nycflights %>% 
+  filter(dest == "ORD") %>% 
+  ggplot(aes(x = arr_delay)) +
+  geom_density()
+```
+
+2.  Compare `arr_delay` across the three origin airports with a single plot. Which airport looks most consistent (least variable)?
+3.  Is there a relationship between `dep_delay` and `arr_delay`? Make an appropriate plot and describe what you see.
+4.  Make a bar plot showing how many flights each `carrier` had that were `"delayed"` vs. `"on time"`. Which carrier has the worst on-time rate?
+5.  **Open-ended:** Come up with your own question about `nycflights` that involves at least one numerical and one categorical variable, then answer it with a plot.
+
+*(If you'd rather work with a different dataset for #5, `cubs_all_time.csv` also works well here — swap in `read_csv("cubs_all_time.csv")` for the `data` argument in any of the geoms above.)*
