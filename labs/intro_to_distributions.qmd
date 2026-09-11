@@ -1,0 +1,151 @@
+---
+title: "Lab: Wrangling & Distributions in Code"
+subtitle: "Geometric, binomial, and the normal approximation"
+format:
+  html:
+    self-contained: true
+    toc: true
+editor: source
+---
+
+## Getting started
+
+```{r setup, message=FALSE}
+library(tidyverse)
+library(openintro)
+data(nycflights)
+```
+
+------------------------------------------------------------------------
+
+## Part 1: Wrangling refresher
+
+A few more reps with `nycflights` before new material.
+
+**Try it:**
+
+1.  Create a new variable `delayed` that's `TRUE` if `dep_delay >= 5` and `FALSE` otherwise (hint: `mutate()`).
+2.  For each `carrier`, find the number of flights and the proportion that were `delayed`. Sort from highest to lowest delay proportion (hint: `group_by()`, `summarise()`, `arrange()`).
+3.  Do the same thing, but broken down by `carrier` *and* `origin` together.
+
+```{r wrangling-practice}
+# TODO: (1) create the delayed variable
+
+# TODO: (2) proportion delayed by carrier, sorted
+
+# TODO: (3) proportion delayed by carrier and origin
+
+```
+
+------------------------------------------------------------------------
+
+## Part 2: Geometric and binomial distributions in R
+
+R has built-in functions for every named distribution, following a consistent naming pattern: `d___()` (density/PMF), `p___()` (CDF), `q___()` (inverse CDF / quantile), `r___()` (random draws).
+
+### Geometric distribution
+
+Recall Dr. Smith's version of the Milgram experiment: probability she finds her *first* refusal on the 3rd person, where $p = 0.35$.
+
+```{r}
+# P(1st and 2nd shock, 3rd refuses) for geometric with p = 0.35
+# NOTE: R's dgeom() counts *failures before* the first success, so "3rd person"
+# in our lecture's counting corresponds to 2 failures before success in R's parameterization.
+dgeom(x = 2, prob = 0.35)
+```
+
+**Try it:** Confirm this matches the by-hand calculation from lecture: $0.65 \times 0.65 \times 0.35$. Then use `dgeom()` to confirm the "10th person" calculation ($0.65^9 \times 0.35$) and the die-rolling practice problem ($(5/6)^5 \times (1/6)$, first 6 on the 6th roll).
+
+```{r}
+# TODO: confirm all three by hand
+
+```
+
+### Binomial distribution
+
+Recall the Gallup obesity example: probability of exactly 8 out of 10 randomly sampled Americans being obese, where $p = 0.262$.
+
+```{r}
+dbinom(x = 8, size = 10, prob = 0.262)
+```
+
+**Try it:**
+
+1.  Confirm the Milgram 4-person example from lecture: $P(\text{exactly 1 of 4 refuses})$, with $p = 0.35$. Does `dbinom()` match the $0.3844$ we calculated by hand?
+2.  For the obesity example with $n=100$: confirm the mean ($np$) and SD ($\sqrt{np(1-p)}$) from lecture using R as a calculator.
+
+```{r}
+# TODO: (1) Milgram 4-person example
+
+# TODO: (2) mean and SD for n=100
+
+```
+
+------------------------------------------------------------------------
+
+## Part 3: Watching the binomial become normal
+
+Lecture showed this with exact probability calculations. Let's *simulate* it instead, using `rbinom()` to draw many random binomial outcomes and looking at their distribution.
+
+```{r}
+set.seed(2026)
+
+sim_and_plot <- function(n, p, n_sims = 10000) {
+  draws <- rbinom(n_sims, size = n, prob = p)
+  tibble(x = draws) %>%
+    ggplot(aes(x = x)) +
+    geom_histogram(binwidth = 1, fill = "#4C72B0", color = "white") +
+    labs(title = paste0("Binomial(n=", n, ", p=", p, "), ", n_sims, " simulated draws"),
+         x = "number of successes", y = "count")
+}
+
+# Same p = 0.10 as the lecture figure, watch the shape change as n grows
+sim_and_plot(n = 10, p = 0.10)
+sim_and_plot(n = 30, p = 0.10)
+sim_and_plot(n = 100, p = 0.10)
+sim_and_plot(n = 300, p = 0.10)
+```
+
+**Discuss:** As `n` increases, how does the shape change? Compare what you see at $n=10$ (where $np = 1$, clearly failing the $np \ge 10$ condition) to $n=100$ and $n=300$. At what point would you feel comfortable using a normal approximation?
+
+**Try it:** Try $p = 0.5$ instead of $0.10$, for $n = 10$ and $n = 30$. Does the distribution look normal-ish at a *smaller* $n$ than it did with $p=0.10$? What does this tell you about why the condition checks $n(1-p) \ge 10$ separately from $np \ge 10$, rather than just checking that $n$ is "big enough"?
+
+```{r}
+# TODO: repeat with p = 0.5
+
+```
+
+------------------------------------------------------------------------
+
+## Part 4: Putting it together
+
+### Warm-up: recreate the Facebook power-users example
+
+Confirm lecture's result in code: among 245 Facebook friends, with 25% being "power users," what's the probability of 70 or more power-user friends?
+
+```{r}
+# TODO: normal approximation (mu, sigma, z, and 1 - pnorm(z))
+
+# TODO: compare to the exact answer using 1 - pbinom(69, size = 245, prob = 0.25)
+```
+
+How close is the normal approximation to the exact binomial answer? Given what lecture said about continuity corrections, is this a case where you'd expect them to matter much (a wide tail area) or a lot (a narrow range)?
+
+### Applying it to real data — normal approximation with `nycflights`
+
+Using your wrangling from Part 1: pick one `carrier` and treat their departure delays as a binomial-style process (delayed vs. not delayed), using the proportion you calculated earlier as your estimate of $p$.
+
+**Your tasks:**
+
+1.  Using your chosen carrier's `delayed` proportion as $p$ and their number of flights as $n$, check whether the normal approximation conditions ($np \ge 10$, $n(1-p) \ge 10$) are satisfied.
+2.  If so, use the normal approximation to estimate the probability that *more than* some threshold number of their flights (you choose a reasonable threshold) were delayed. Show your $z$-score calculation.
+3.  Confirm your normal-approximation answer against the exact binomial probability using `pbinom()`. How close are they?
+
+```{r part4}
+# TODO: (1) check conditions
+
+# TODO: (2) normal approximation calculation
+
+# TODO: (3) compare to exact pbinom() result
+
+```
