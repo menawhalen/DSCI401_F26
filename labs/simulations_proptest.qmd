@@ -1,0 +1,152 @@
+---
+title: "Lab: Simulation vs. Mathematical Models for Proportions"
+format:
+  html:
+    self-contained: true
+    toc: true
+editor: source
+---
+
+## Getting started
+
+Today we revisit case studies from lecture and solve each one **two ways**: by simulation (what we already know) and using R's built-in mathematical-model function, `prop.test()`. The goal is to see when they agree, when they don't, and why.
+
+```{r setup, message=FALSE}
+library(tidyverse)
+library(openintro)
+data(sex_discrimination)
+data(opportunity_cost)
+data(cpr)
+```
+
+------------------------------------------------------------------------
+
+## Part 1: One proportion — the medical consultant
+
+Recall: a consultant's clients had 3 complications out of 62 liver-donor surgeries, versus a national rate of 10%. $H_0: p = 0.10$.
+
+**Important:** per our discussion on two-sided tests, this really should be a two-sided question — we'd care if her rate were *either* better or worse than 10%. Let's test it that way this time (lecture only did a one-sided version).
+
+### Simulating the null distribution
+
+Simulate what $\hat{p}$ would look like across many samples of 62 patients, **if** the true rate really were 10%:
+
+```{r}
+set.seed(2026)
+n_reps <- 10000
+
+null_sim <- rbinom(n_reps, size = 62, prob = 0.10) / 62
+
+obs_p <- 3 / 62
+
+# Two-sided simulated p-value: how often is a simulated p-hat at least as far
+# from 0.10 as our observed value, in EITHER direction?
+mean(abs(null_sim - 0.10) >= abs(obs_p - 0.10))
+```
+
+```{r}
+tibble(p_hat = null_sim) %>%
+  ggplot(aes(x = p_hat)) +
+  geom_histogram(binwidth = 0.01, fill = "lightblue", color = "black") +
+  geom_vline(xintercept = obs_p, color = "red", linetype = "dashed") +
+  geom_vline(xintercept = 0.10 + (0.10 - obs_p), color = "red", linetype = "dashed") +
+  labs(title = "Simulated null distribution: medical consultant",
+       x = expression(hat(p)[boot]), y = "count")
+```
+
+**Try it:** Does your simulated two-sided p-value roughly match the value mentioned in lecture (\~0.244, doubling the one-sided \~0.122)?
+
+### The mathematical-model version
+
+```{r}
+prop.test(x = 3, n = 62, p = 0.10, alternative = "two.sided")
+```
+
+**Discuss:**
+
+1.  Compare this p-value to your simulation and to lecture's normal-model calculation ($Z=-1.37$, one-sided $p\approx0.085$, doubled $\approx0.171$). They won't match exactly — why not? (Hint: think about what lecture said about this null distribution's *shape*.)
+2.  By default, `prop.test()` applies a **continuity correction**. Try adding `correct = FALSE` and see if the p-value moves closer to the hand-calculated normal-model answer.
+
+```{r}
+# TODO: re-run prop.test with correct = FALSE and compare
+
+```
+
+------------------------------------------------------------------------
+
+## Part 2: Two proportions — the CPR study
+
+Recall the blood-thinner study: does it change 24-hour survival after CPR? This was our two-sided example in lecture.
+
+```{r}
+glimpse(cpr)
+table(cpr)
+```
+
+### Simulating the null distribution (two-sided)
+
+```{r}
+set.seed(2026)
+n_reps <- 10000
+
+pooled <- cpr$outcome
+n_trmt <- sum(cpr$group == "treatment")
+n_ctrl <- sum(cpr$group == "control")
+
+obs_diff <- mean(cpr$outcome[cpr$group == "treatment"] == "survived") -
+            mean(cpr$outcome[cpr$group == "control"] == "survived")
+
+sim_diffs <- replicate(n_reps, {
+  shuffled <- sample(pooled)
+  p_trmt <- mean(shuffled[1:n_trmt] == "survived")
+  p_ctrl <- mean(shuffled[(n_trmt + 1):(n_trmt + n_ctrl)] == "survived")
+  p_trmt - p_ctrl
+})
+
+# Two-sided p-value
+mean(abs(sim_diffs) >= abs(obs_diff))
+```
+
+**Check:** does this roughly match lecture's reported two-sided p-value of \~0.26?
+
+### The mathematical-model version
+
+```{r}
+prop.test(x = c(14, 11), n = c(40, 50), alternative = "two.sided")
+```
+
+**Discuss:**
+
+1.  What confidence interval does `prop.test()` report for the difference in survival proportions? Does it contain 0? What does that tell you about the conclusion?
+2.  Compare this p-value to your simulation above and to lecture's normal-model version. How well do they agree this time, compared to the medical consultant case? Why might that be (think about sample size and how close $\hat{p}$ is to 0 or 1 in each case)?
+
+------------------------------------------------------------------------
+
+## Part 3: In-class exercise — your choice
+
+Pick **one** of the two remaining case studies below and solve it **both ways** (simulation and `prop.test()`), then compare.
+
+**Option A: Sex discrimination** (`sex_discrimination`, columns `sex`, `decision`) — originally a one-sided test. Redo it as **two-sided** this time.
+
+**Option B: Opportunity cost** (`opportunity_cost`, columns `group`, `decision`) — also originally one-sided; redo as **two-sided**.
+
+```{r exercise}
+# TODO: simulation-based two-sided test
+
+# TODO: prop.test() version
+
+```
+
+**Answer these:**
+
+1.  State $H_0$ and $H_A$ (two-sided) in your own words and in symbols.
+2.  Report both p-values (simulation and `prop.test()`). Do they lead to the same conclusion at $\alpha = 0.05$?
+3.  Check the success-failure condition ($n\hat{p} \ge 10$ and $n(1-\hat{p}) \ge 10$ for each group) for your chosen case study. Based on what you saw in Part 1, would you expect the normal model to be trustworthy here?
+
+------------------------------------------------------------------------
+
+## Wrapping up
+
+- `prop.test()` gives you, in one line, everything we've been computing by hand: a Z-based (technically chi-square, which is equivalent here) p-value **and** a confidence interval.
+- It's fast — but it's still trusting the normal approximation, so the **success-failure condition still matters**. When it's violated (small $n$, or $p$ near 0 or 1), simulation-based methods are more trustworthy, even though they take more code to run.
+- Next week: we move from proportions to **means**, and meet `t.test()` — the mathematical-model tool for exactly that setting.
