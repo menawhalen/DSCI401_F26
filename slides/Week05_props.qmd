@@ -1,0 +1,168 @@
+---
+title: "Inference for Proportions: One \\& Two Samples"
+subtitle: "IMS Chapters 16 \\& 17"
+format:
+  beamer:
+    theme: default
+    incremental: false
+    aspectratio: 169
+    slide-level: 2
+---
+
+## Why these two chapters go together
+
+Chapters 16 and 17 aren't new ideas — they're **the same toolkit you already have** (bootstrapping, randomization, the normal model, hypothesis tests, confidence intervals), applied first to **one** proportion, then to the **difference between two** proportions.
+
+. . .
+
+- **Ch. 16 (one proportion):** review of everything from Ch. 11-13, plus one genuinely new tool — figuring out **how big a sample you need** before collecting data.
+
+. . .
+
+- **Ch. 17 (two proportions):** the same machinery, extended to comparing two groups — which means one new wrinkle in how we compute the standard error.
+
+## Recap: one proportion, three ways
+
+For a single proportion $\hat p$, you already know three ways to get a p-value or CI:
+
+| Method | Tool |
+|---|---|
+| Simulation (null true) | randomization / null simulation |
+| Simulation (no null assumed) | bootstrapping |
+| Mathematical model | $Z = \dfrac{\hat p - p_0}{SE}$, $\ SE = \sqrt{p(1-p)/n}$ |
+
+All three answer the same question — they just make different tradeoffs between speed, transparency, and required conditions (independence; for the normal model, also $np\ge10$ and $n(1-p)\ge10$).
+
+## New idea: how big a sample do I need?
+
+Every confidence interval has a margin of error, $ME = z^\star \times SE$. Instead of computing $ME$ *after* collecting data, we can flip the formula around **before** collecting data, to plan a sample size.
+
+. . .
+
+::: {.callout-note title="Sample size for a desired margin of error"}
+$$n = \left(\frac{z^\star}{ME}\right)^2 p(1-p)$$
+If you have no prior estimate of $p$, use $p=0.5$ — this is the most conservative choice, since $p(1-p)$ is maximized at $p=0.5$, giving the largest (safest) $n$.
+:::
+
+## Worked example: planning a sample size
+
+> Researchers want to estimate the satisfaction rate for a new tutoring program to within a margin of error of 3%, at 95% confidence, with no prior estimate of the true rate.
+
+. . .
+ 
+$$n = \left(\frac{1.96}{0.03}\right)^2 (0.5)(0.5) = (65.33)^2 (0.25) \approx 1067.1$$
+
+**Always round up:** $n = 1068$. Rounding down would give a margin of error very slightly *larger* than what was promised.
+
+. . .
+
+# Two proportions
+
+## Comparing two groups: what changes?
+
+Now we have two independent samples, and we care about the **difference** $p_1 - p_2$. The point estimate is simple: $\hat p_1 - \hat p_2$. The standard error is where it gets interesting — and it depends on *what question you're asking*.
+
+. . .
+
+- **Building a confidence interval?** Use each group's own $\hat p$ — the **unpooled** SE.
+
+. . .
+
+- **Testing $H_0: p_1 = p_2$?** Under that null, both groups are assumed to share one common proportion — so we should estimate that *shared* rate first, using **all** the data. This is the **pooled** SE.
+
+## The two standard errors
+
+::: {.callout-note title="Unpooled SE (for a confidence interval)"}
+$$SE = \sqrt{\frac{\hat p_1(1-\hat p_1)}{n_1} + \frac{\hat p_2(1-\hat p_2)}{n_2}}$$
+:::
+
+. . .
+
+::: {.callout-note title="Pooled SE (for a hypothesis test of $H_0: p_1=p_2$)"}
+$$\hat p_{pool} = \frac{x_1+x_2}{n_1+n_2}, \qquad SE = \sqrt{\hat p_{pool}(1-\hat p_{pool})\left(\frac{1}{n_1}+\frac{1}{n_2}\right)}$$
+:::
+
+. . .
+
+**Why the difference matters:** under $H_0$, we're assuming one shared truth — so we should estimate the SE consistently with that assumption, not by trusting each sample's own (possibly different) $\hat p$.
+
+## Success-failure condition, twice over
+
+Just like the one-proportion case, the normal model requires large enough samples — now checked **separately for each group**, using the pooled proportion when testing $H_0$:
+
+. . .
+
+$$n_1 \hat p_{pool} \ge 10, \quad n_1(1-\hat p_{pool}) \ge 10, \quad n_2 \hat p_{pool} \ge 10, \quad n_2(1-\hat p_{pool}) \ge 10$$
+
+## Case study: disaggregating tobacco use
+
+A 2021 study (Rao et al.) examined current smoking rates among different Asian American subgroups, rather than lumping them together — a good example of why disaggregating categories can matter.
+
+|              | Asian-Indian | Chinese |
+|--------------|:---:|:---:|
+| $n$          | 4,373 | 4,736 |
+| smokers      | 223   | 279   |
+| $\hat p$     | 0.0510 | 0.0589 |
+
+> Is the smoking rate among Asian-Indian Americans different from the rate among Chinese Americans?
+
+. . . 
+
+$H_0: p_{Indian} = p_{Chinese}$ vs. $H_A: p_{Indian} \ne p_{Chinese}$ (two-sided, by default).
+
+## Running the test
+
+$$\hat p_{pool} = \frac{223+279}{4373+4736} = \frac{502}{9109} \approx 0.0551$$
+. . .
+
+$$SE_{pool} = \sqrt{0.0551(0.9449)\left(\frac{1}{4373}+\frac{1}{4736}\right)} \approx 0.00479$$
+
+. . .
+
+$$Z = \frac{0.0510 - 0.0589}{0.00479} \approx -1.65 \qquad \Rightarrow \qquad p\text{-value} \approx 0.098$$
+
+. . .
+
+Since $0.098 > 0.05$, we **fail to reject $H_0$** — this sample doesn't provide convincing evidence of a difference between these two groups' smoking rates.
+
+## Now the confidence interval
+
+For the CI, switch to the **unpooled** SE (each group keeps its own $\hat p$):
+
+. . .
+
+$$SE_{unpooled} = \sqrt{\frac{0.0510(0.9490)}{4373} + \frac{0.0589(0.9411)}{4736}} \approx 0.00477$$
+
+. . .
+
+
+$$(\hat p_1 - \hat p_2) \pm 1.96 \times SE = -0.0079 \pm 1.96(0.00477) = (-0.0173,\ 0.0014)$$
+
+. . .
+
+**Consistency check:** the interval contains 0 — matching our "fail to reject" conclusion from the test. This will always line up, since both are built from essentially the same logic.
+
+## In code
+
+```r
+# Two-proportion test/CI in R -- same function you've already used
+prop.test(x = c(223, 279), n = c(4373, 4736))
+```
+
+`prop.test()` handles the pooled/unpooled distinction internally — it's using the pooled SE to get the p-value, and (a version close to) the unpooled SE for the reported confidence interval, all in one call.
+
+## Wrapping up
+
+- Chapters 16 and 17 don't introduce a new *kind* of thinking — they're the same simulation/CLT/hypothesis-testing framework from Ch. 11-14, applied to one proportion and then to two.
+
+. . .
+
+- The one genuinely new tool: **planning sample size in advance**, using $n = (z^\star/ME)^2\, p(1-p)$.
+
+. . .
+
+- The one genuinely new wrinkle: **pooled vs. unpooled SE** when comparing two proportions — pool when your null hypothesis assumes one shared truth, don't pool when you're just trying to estimate two separate quantities.
+
+. . .
+
+- Next: this exact same one-vs-two-group structure repeats again for **means** — that's what the t-test extensions to two samples will look like.
