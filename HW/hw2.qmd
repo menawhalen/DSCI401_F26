@@ -1,0 +1,172 @@
+---
+title: "Homework: Hypothesis Testing, Confidence Intervals \\& Proportions"
+subtitle: "IMS Chapters 11-14, 16-17"
+author: "YOUR NAME HERE"
+format:
+  html:
+    self-contained: true
+    toc: true
+---
+
+## Instructions
+
+- Show your work for every computation, not just a final number.
+- Questions with a code chunk require you to actually run code.
+- Render this file to HTML and submit the `.html` file.
+
+```{r setup, message=FALSE}
+library(tidyverse)
+library(openintro)
+data(avandia)
+data(heart_transplant)
+```
+
+------------------------------------------------------------------------
+
+# Chapter 11: Hypothesis Testing with Randomization
+
+## Q1. Identify the parameter, II
+
+For each situation below, state whether the parameter of interest is a **mean** or a **proportion**.
+
+a.  A poll shows that 64% of Americans personally worry a great deal about federal spending and the budget deficit.
+b.  A survey reports that local TV news revenue increased 17% over a two-year period, while newspaper revenue decreased 6.4% over the same period.
+c.  High school and college students are asked whether they use geolocation services on their smartphones.
+d.  Smartphone users are asked whether they use a web-based taxi service.
+e.  Smartphone users are asked how many times they used a web-based taxi service over the last year.
+
+## Q2. Identify hypotheses, II
+
+Write the null and alternative hypotheses in words **and** in symbols for each situation.
+
+a.  Since 2008, California chain restaurants have been required to display calorie counts on menus. Before calorie counts were displayed, average calorie intake at a restaurant was 1100 calories. A nutritionist wants to know if average calorie intake has changed since calorie counts started being displayed.
+b.  The average GRE Verbal Reasoning score was 462 for test-takers between July 2004 and June 2007. In 2021, the average was slightly higher. Does this provide convincing evidence that the average GRE Verbal score has changed since 2021?
+
+## Q3. Side effects of Avandia
+
+Rosiglitazone (Avandia) and Pioglitazone (Actos) are both type-2 diabetes medications. In a retrospective study of 227,571 Medicare beneficiaries, 2,593 of 67,593 Rosiglitazone users and 5,386 of 159,978 Pioglitazone users had serious cardiovascular problems. The `avandia` dataset (in the `openintro` package) contains this data.
+
+a.  What proportion of all patients in the study had cardiovascular problems?
+b.  If treatment and cardiovascular outcome were independent, how many patients in the Rosiglitazone group would we *expect* to have had cardiovascular problems? Compare this to the number actually observed.
+c.  **True or false, with explanation:** "Since the rate of incidence was higher for the Rosiglitazone group (3.8% vs. 3.4%), Rosiglitazone *causes* cardiovascular problems." Be careful — a statement's conclusion can be correct while the reasoning behind it is still wrong.
+d.  **Code:** Using the `avandia` dataset, run a randomization test (shuffle the treatment labels, recompute the difference in proportions, repeat many times) to evaluate whether treatment and cardiovascular outcome are independent. Report your simulated p-value and conclusion.
+
+```{r q3}
+# TODO: randomization test using the avandia dataset
+
+```
+
+------------------------------------------------------------------------
+
+# Chapter 12: Bootstrapping
+
+## Q4. Cyberbullying rates
+
+A survey found that 54% to 64% of teens reported experiencing cyberbullying (a 95% confidence interval).
+
+a.  A newspaper claims "a majority of teens have experienced cyberbullying." Is this claim supported by the interval? Explain.
+b.  A researcher conjectured that 70% of teens have experienced cyberbullying. Is this claim supported by the interval? Explain.
+c.  Without recalculating, would the researcher's 70% claim from part (b) be supported by a **90%** confidence interval instead? Explain your reasoning (think about how interval width changes with confidence level).
+
+## Q5. Chronic illness, bootstrapped
+
+The 2012 Pew Research Foundation report found that 45% of a sample of 3,014 US adults live with one or more chronic conditions.
+
+a.  **Code:** Simulate a dataset consistent with this study (3,014 observations, 45% "yes") and construct a 92% bootstrap percentile confidence interval for the true proportion (resample with replacement, 1000+ times).
+b.  Interpret your interval in the context of the study.
+c.  Is 50% inside your interval? What does that tell you about whether a majority of US adults live with a chronic condition?
+
+```{r q5}
+# TODO: simulate the sample and bootstrap a 92% CI
+
+```
+
+------------------------------------------------------------------------
+
+# Chapter 13: Mathematical Models
+
+## Q6. Interpreting a Z-score from a sample proportion
+
+Suppose you conduct a hypothesis test about a population proportion and calculate the Z-score to be 0.47.
+
+For each statement below, say whether it is the **best interpretation** of this value. For every statement that is *not* a good interpretation, identify the statistical idea it's actually (incorrectly) describing.
+
+a.  "The probability is 0.47 that the null hypothesis is true."
+b.  "If the null hypothesis were true, the probability would be 0.47 of obtaining a sample proportion as far from the hypothesized value as observed."
+c.  "The sample proportion is 0.47 standard errors greater than the hypothesized value of the population proportion."
+d.  "The sample proportion is equal to 0.47 times the standard error."
+e.  "The sample proportion is 0.47."
+
+## Q7. Social media users and news, mathematical model
+
+A 2022 poll found that 50% of US adults get news from social media sometimes or often, with a reported standard error of 0.5%.
+
+a.  Construct a 99% confidence interval for the true proportion, and interpret it in context.
+b.  **True or false, with explanation, for each:**
+    i.  "The data provide statistically discernible evidence that more than half of US adults get news through social media sometimes or often" (using $\alpha=0.05$).
+    ii. "Since the standard error is 0.5%, we can conclude that 99.5% of all US adults were included in the study."
+    iii. "If we want to reduce the standard error of the estimate, we should collect less data."
+    iv. "A 90% confidence interval for this same estimate will be *wider* than the 99% confidence interval."
+
+## Q8. Quality control
+
+An engineer at a factory samples 212 computer chips during a week of production and finds 27 defective.
+
+a.  What is the point estimate for the true proportion of defective chips this week?
+b.  Compute the standard error of this estimate using the mathematical model.
+c.  The historical defect rate is 10%. Should the engineer be surprised by this week's observed rate? Support your answer with a hypothesis test.
+d.  If the true population defect rate really is 10%, recompute the standard error using $p=0.10$ in place of $\hat p$. How much does the standard error change compared to part (b)?
+e.  **Code:** Confirm your hypothesis test from part (c) using `prop.test()`.
+
+```{r q8}
+# TODO: prop.test() for the chip defect rate
+
+```
+
+------------------------------------------------------------------------
+
+# Chapter 14: Decision Errors
+
+## Q9. Testing for food safety
+
+A food safety inspector investigates a restaurant after customer complaints about poor sanitation. If he decides the restaurant is in gross violation, its license to serve food will be revoked.
+
+a.  Write the hypotheses (in words) for this scenario.
+b.  What would a Type I error mean here?
+c.  What would a Type II error mean here?
+d.  Which error is more problematic for the *restaurant owner*? Explain.
+e.  Which error is more problematic for the *diners*? Explain.
+f.  As a diner, would you want the inspector to require "strong evidence" or "very strong evidence" of a violation before revoking a license? Explain your reasoning in terms of the two error rates.
+
+## Q10. Which is higher?
+
+For each pair of scenarios, state whether the value of interest is larger under scenario (i), scenario (ii), or equal in both. Briefly justify each answer.
+
+a.  The standard error of $\hat p$ when (i) $n=100$ or (ii) $n=400$.
+b.  The margin of error of a confidence interval when the confidence level is (i) 90% or (ii) 80%.
+c.  The p-value for a Z-statistic of 2.5, calculated from (i) a sample of $n=50$ or (ii) a sample of $n=500$.
+d.  The probability of a Type II error, when $H_A$ is true, at a discernibility level of (i) 0.05 or (ii) 0.10.
+
+## Q11. True or false
+
+Determine whether each statement is true or false. If false, explain how to correct it.
+
+a.  If a given value is within a 95% confidence interval, it will also be within a 99% confidence interval built from the same data.
+b.  Decreasing the discernibility level ($\alpha$) will increase the probability of making a Type I error.
+c.  Suppose $H_0: p=0.5$ and we fail to reject $H_0$. Under this scenario, the true population proportion is 0.5.
+d.  With large sample sizes, even small differences between the null value and the observed point estimate (the "effect size") will tend to be identified as statistically discernible.
+
+## Q12. Online communication — spot the error, then run it correctly
+
+A study suggests 60% of college students spend 10+ hours per week communicating online. You suspect this is wrong and sample 160 students from your dorm, finding 70% meet this description. A friend proposes:
+
+$$H_0: \hat p = 0.60 \qquad H_A: \hat p \ne 0.70$$
+
+a.  Identify every error in your friend's hypothesis statement. (Hint: think carefully about what symbol belongs in a hypothesis statement, and what value(s) belong on each side.)
+b.  Write the correct hypotheses.
+c.  **Code:** Actually run this hypothesis test (using either a randomization/simulation approach or `prop.test()`), and state your conclusion in context.
+
+```{r q12}
+# TODO: correctly test H0: p = 0.60 vs Ha: p != 0.60
+
+```
