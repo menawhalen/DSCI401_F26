@@ -1,0 +1,163 @@
+---
+title: "Lab: Hypothesis Testing, Bootstrapping, Mathematical Models & Decision Errors"
+format:
+  html:
+    self-contained: true
+    toc: true
+editor: visual
+---
+
+## Getting started
+
+```{r setup, message=FALSE}
+library(tidyverse)
+library(openintro)
+data(avandia)
+data(cpr)
+```
+
+Today has two goals: (1) a quick refresher on the three methods you already know (randomization, bootstrapping, mathematical models), and (2) using **simulation** to actually *see* the ideas from Chapter 14 — Type I error rate, power, and why switching to a one-sided test after peeking at your data is a bad idea — rather than just reading about them.
+
+------------------------------------------------------------------------
+
+## Part 1: Quick review — randomization and `prop.test()`
+
+Using the `avandia` dataset (diabetes drug side-effect study from homework):
+
+```{r}
+glimpse(avandia)
+table(avandia)
+```
+
+**Try it:**
+
+1.  State $H_0$ and $H_A$ for a two-sided test of whether `rosi` (treatment) and cardiovascular outcome are independent.
+2.  Run a randomization test (shuffle, recompute, repeat) **and** a `prop.test()`, and compare the two p-values.
+
+```{r part1}
+# TODO: randomization test
+
+# TODO: prop.test()
+
+```
+
+## Part 2: Quick review — bootstrapping
+
+Using the same `avandia` data, treat the Rosiglitazone group alone as your sample of interest.
+
+**Try it:** Construct a 95% bootstrap percentile confidence interval for the true proportion of Rosiglitazone users who experience cardiovascular problems.
+
+```{r part2}
+# TODO: bootstrap CI for the Rosiglitazone group's event rate
+
+```
+
+------------------------------------------------------------------------
+
+## Part 3: Seeing $\alpha$ as the Type I error rate
+
+Here's the key idea we'll test empirically: if $H_0$ is *actually true*, and you run a hypothesis test at $\alpha = 0.05$, you should incorrectly reject $H_0$ about 5% of the time — no more, no less. Let's check.
+
+```{r}
+set.seed(2026)
+n_sim <- 1000
+n <- 40
+p_null <- 0.5   # we will simulate data where this null is EXACTLY true
+
+successes <- rbinom(n_sim, size = n, prob = p_null)
+pvals <- sapply(successes, function(x) prop.test(x, n, p = p_null)$p.value)
+
+mean(pvals < 0.05)
+```
+
+**Discuss:** Is this close to 0.05? If it's noticeably *lower*, recall what we learned about `prop.test()`'s default continuity correction — try re-running with `correct = FALSE` inside the `prop.test()` call above and see if the empirical rate moves closer to 0.05.
+
+```{r part3-nocorrect}
+# TODO: repeat using correct = FALSE and compare
+
+```
+
+**Try it:** Repeat the whole simulation using $\alpha = 0.01$ instead of $0.05$. What empirical Type I error rate do you get? Does it match what you'd expect?
+
+## Part 4: Seeing power (and 1 − Type II error rate)
+
+Now simulate a situation where $H_A$ is **actually true** — the real proportion is 0.65, but we're still testing against a null of 0.5. How often does our test correctly catch that?
+
+```{r}
+set.seed(2026)
+n_sim <- 1000
+n <- 40
+p_true <- 0.65
+p_null <- 0.5
+
+successes <- rbinom(n_sim, size = n, prob = p_true)
+pvals <- sapply(successes, function(x) prop.test(x, n, p = p_null)$p.value)
+
+power_est <- mean(pvals < 0.05)
+power_est
+```
+
+This proportion — how often we correctly reject a false $H_0$ — is an estimate of **power**. The complement, `1 - power_est`, estimates the **Type II error rate**.
+
+**Try it:** Recompute power using $n=100$ instead of $n=40$ (keep $p_{true}=0.65$, $p_{null}=0.5$). Did power go up or down? Does this match what lecture said about sample size and power?
+
+```{r part4}
+# TODO: recompute power with n = 100
+
+```
+
+**Try it:** Now go back to $n=40$, and try `p_true = 0.55` instead of `0.65` (a smaller true effect). What happens to power? Connect this to what lecture said about *effect size* and power.
+
+```{r part4b}
+# TODO: recompute power with a smaller true effect
+
+```
+
+## Part 5: Why you can't switch sides after peeking
+
+Lecture argued that if you always pick whichever *one-sided* test matches the direction your data happens to lean, your true Type I error rate silently doubles (roughly $5\% + 5\% = 10\%$, not 5%). Let's simulate this directly.
+
+```{r}
+set.seed(2026)
+n_sim <- 5000
+n <- 40
+p_null <- 0.5   # null is TRUE in this simulation -- there is no real effect
+
+successes <- rbinom(n_sim, size = n, prob = p_null)
+phat <- successes / n
+
+# The PROPER approach: pre-register a two-sided test, always
+pvals_two_sided <- sapply(successes, function(x) prop.test(x, n, p = p_null)$p.value)
+type1_two_sided <- mean(pvals_two_sided < 0.05)
+
+# The "cheating" approach: after seeing the data, pick whichever one-sided
+# alternative matches the direction phat happens to lean
+pvals_switched <- sapply(seq_along(successes), function(i) {
+  alt <- if (phat[i] > p_null) "greater" else "less"
+  prop.test(successes[i], n, p = p_null, alternative = alt)$p.value
+})
+type1_switched <- mean(pvals_switched < 0.05)
+
+type1_two_sided
+type1_switched
+```
+
+**Discuss:** How do these two empirical error rates compare? Does the "switching" strategy's error rate land close to lecture's predicted \~10%? Why is this a problem in practice — what would it look like if a researcher did this without realizing it?
+
+------------------------------------------------------------------------
+
+## Part 6: In-class exercise
+
+Using the `cpr` dataset (the blood-thinner study):
+
+1.  State $H_0$/$H_A$ for a two-sided test comparing survival rates between `treatment` and `control`.
+2.  Run the test using `prop.test()`.
+3.  Suppose you wanted to know: if the *true* difference in survival rates were as large as what you observed in this sample, how much power would a study of this exact size ($n_{treatment}=40$, $n_{control}=50$) have had to detect it? Design and run a simulation (adapting the code from Part 4) to estimate this.
+4.  In 2-3 sentences, explain what your power estimate tells you about how convincing a "fail to reject" result would have been, *if* that's what this study had found.
+
+```{r part6}
+# TODO: hypothesis test
+
+# TODO: power simulation for this specific study design
+
+```
