@@ -1,0 +1,236 @@
+---
+title: "Lab: Simulation for Two, Paired, and Many Means"
+subtitle: "Randomization and bootstrapping, by hand, for Ch. 20-22"
+format:
+  html:
+    self-contained: true
+    toc: true
+editor: visual
+---
+
+## Getting started
+
+Every method today is **simulation-based** — randomization for hypothesis tests, bootstrapping for confidence intervals. No `t.test()`, no `aov()` until the very end, when we'll use them only to double-check our simulations.
+
+```{r setup, message=FALSE}
+library(tidyverse)
+library(openintro)
+data(stem_cell)
+data(ucla_textbooks_f18)
+data(mlb_players_18)
+```
+
+------------------------------------------------------------------------
+
+## Part 1: Two independent means — stem cells and heart function
+
+```{r}
+stem_cell <- stem_cell %>% mutate(change = after - before)
+glimpse(stem_cell)
+table(stem_cell$trmt)
+```
+
+### Randomization test
+
+$H_0$: ESC treatment has no effect on heart pumping capacity ($\mu_{ESC} - \mu_{control} = 0$). $H_A$: it does.
+
+```{r}
+lev <- sort(unique(stem_cell$trmt))
+n_a <- sum(stem_cell$trmt == lev[1])
+
+obs_diff <- mean(stem_cell$change[stem_cell$trmt == lev[1]]) -
+            mean(stem_cell$change[stem_cell$trmt == lev[2]])
+obs_diff
+```
+
+```{r}
+set.seed(2026)
+n_reps <- 5000
+
+sim_diffs <- replicate(n_reps, {
+  shuffled <- sample(stem_cell$change)
+  mean(shuffled[1:n_a]) - mean(shuffled[(n_a + 1):length(shuffled)])
+})
+
+# Two-sided simulated p-value
+mean(abs(sim_diffs) >= abs(obs_diff))
+```
+
+```{r}
+tibble(diff = sim_diffs) %>%
+  ggplot(aes(x = diff)) +
+  geom_histogram(bins = 30, fill = "lightblue", color = "black") +
+  geom_vline(xintercept = obs_diff, color = "red", linetype = "dashed") +
+  geom_vline(xintercept = -obs_diff, color = "red", linetype = "dashed") +
+  labs(title = "Randomization null distribution: stem cell study",
+       x = "simulated difference in mean change", y = "count")
+```
+
+**Discuss:** Does your simulated p-value support rejecting $H_0$? How does this compare to the bootstrap conclusion from lecture (neither 90% interval overlapped zero)?
+
+### Bootstrap confidence interval
+
+Unlike the randomization test, bootstrapping does **not** assume $H_0$ is true — we resample each group separately, with replacement, from the *actual* data.
+
+```{r}
+set.seed(2026)
+n_boot <- 5000
+
+boot_diffs <- replicate(n_boot, {
+  esc_boot <- sample(stem_cell$change[stem_cell$trmt == lev[1]], replace = TRUE)
+  ctrl_boot <- sample(stem_cell$change[stem_cell$trmt == lev[2]], replace = TRUE)
+  mean(esc_boot) - mean(ctrl_boot)
+})
+
+quantile(boot_diffs, c(0.025, 0.975))
+```
+
+**Try it:** Does this 95% interval agree with your randomization test's conclusion? (Hint: check whether 0 is inside or outside the interval.)
+
+------------------------------------------------------------------------
+
+## Part 2: Paired means — UCLA Bookstore vs. Amazon
+
+```{r}
+textbooks <- ucla_textbooks_f18 %>%
+  mutate(diff = bookstore_new - amazon_new) %>%
+  filter(!is.na(diff))
+
+glimpse(textbooks)
+obs_mean_diff <- mean(textbooks$diff)
+obs_mean_diff
+```
+
+### Randomization test — the paired twist
+
+For paired data, we don't shuffle observations across all 136 prices — we shuffle **within each pair**, randomly deciding whether to keep or flip the sign of each book's price difference. (Flipping the sign is equivalent to swapping which store's price got subtracted from which, for that one book.)
+
+```{r}
+set.seed(2026)
+n_reps <- 5000
+
+sim_means <- replicate(n_reps, {
+  signs <- sample(c(-1, 1), size = length(textbooks$diff), replace = TRUE)
+  mean(textbooks$diff * signs)
+})
+
+mean(abs(sim_means) >= abs(obs_mean_diff))
+```
+
+**Discuss:** Why does flipping the sign of a difference simulate "this book's bookstore/Amazon assignment happened to be swapped," specifically for *paired* data? Why wouldn't a plain full-shuffle (like Part 1) make sense here?
+
+### Bootstrap confidence interval
+
+For paired data, we bootstrap the **differences themselves** — each difference is already a single number per book, so this is really just a one-sample bootstrap (same as Awesome Auto from Ch. 19).
+
+```{r}
+set.seed(2026)
+boot_means <- replicate(5000, mean(sample(textbooks$diff, replace = TRUE)))
+quantile(boot_means, c(0.025, 0.975))
+```
+
+**Try it:** Change the confidence level to 99% (hint: adjust the `quantile()` probabilities). Does the interval still exclude 0?
+
+------------------------------------------------------------------------
+
+## Part 3: Many means — baseball positions and ANOVA
+
+```{r}
+glimpse(mlb_players_18)
+table(mlb_players_18$position)
+```
+
+The raw `position` column has specific fielding positions (1B, 2B, 3B, SS, C, LF, CF, RF, DH, P), not the simplified outfield/infield/catcher grouping used in lecture — we need to build that grouping ourselves. We'll also apply the same `AB >= 100` cutoff (at least 100 at-bats) used in the textbook, and drop pitchers and designated hitters, who don't have a fielding position comparable to the other groups.
+
+```{r}
+mlb <- mlb_players_18 %>%
+  filter(AB >= 100, !position %in% c("P", "DH")) %>%
+  mutate(position_group = case_when(
+    position %in% c("LF", "CF", "RF") ~ "OF",
+    position %in% c("1B", "2B", "3B", "SS") ~ "IF",
+    position == "C" ~ "C"
+  )) %>%
+  drop_na(OBP, position_group)
+
+mlb %>% group_by(position_group) %>% summarise(n = n(), mean_obp = mean(OBP), sd_obp = sd(OBP))
+```
+
+ANOVA's test statistic ($F$) isn't built into base R the way `mean()` or `sd()` are — so we'll write our own function, then simulate with it exactly like every other randomization test this semester.
+
+```{r}
+compute_F <- function(y, g) {
+  grand_mean <- mean(y)
+  groups <- split(y, g)
+  n <- length(y)
+  k <- length(groups)
+  msg <- sum(sapply(groups, function(x) length(x) * (mean(x) - grand_mean)^2)) / (k - 1)
+  mse <- sum(sapply(groups, function(x) sum((x - mean(x))^2))) / (n - k)
+  msg / mse
+}
+
+obs_F <- compute_F(mlb$OBP, mlb$position_group)
+obs_F
+```
+
+### Randomization test for ANOVA
+
+Same idea as always: if $H_0$ (all group means equal) is true, it shouldn't matter which position label got attached to which player. Shuffle the position labels, recompute $F$, repeat.
+
+```{r}
+set.seed(2026)
+n_reps <- 2000   # F takes longer to compute, so fewer reps keeps this fast
+
+sim_Fs <- replicate(n_reps, {
+  shuffled_pos <- sample(mlb$position_group)
+  compute_F(mlb$OBP, shuffled_pos)
+})
+
+# ANOVA p-values are always one-sided (large F = more evidence against H0)
+mean(sim_Fs >= obs_F)
+```
+
+```{r}
+tibble(F = sim_Fs) %>%
+  ggplot(aes(x = F)) +
+  geom_histogram(bins = 30, fill = "lightblue", color = "black") +
+  geom_vline(xintercept = obs_F, color = "red", linetype = "dashed") +
+  labs(title = "Randomization null distribution of F: OBP by position",
+       x = "simulated F statistic", y = "count")
+```
+
+**Discuss:** Why is the p-value for an ANOVA randomization test always computed as `mean(sim_Fs >= obs_F)` — one direction only — rather than the two-sided `abs()` trick we used for means? (Hint: think about what a very *negative* or very *small* F would even mean here.)
+
+------------------------------------------------------------------------
+
+## Part 4: Checking your work with the mathematical models
+
+Now — and only now — confirm each simulation against its mathematical-model equivalent.
+
+```{r}
+# Part 1: two independent means
+t.test(change ~ trmt, data = stem_cell)
+
+# Part 2: paired means
+t.test(textbooks$diff)
+
+# Part 3: ANOVA
+summary(aov(OBP ~ position_group, data = mlb))
+```
+
+**Discuss:** For each of the three, how closely does the simulated p-value match the mathematical model's p-value? If any don't match closely, what would you check first (think back to the conditions for each method)?
+
+------------------------------------------------------------------------
+
+## Part 5: In-class exercise
+
+Pick **one** of the three simulation techniques above (independent-means randomization, paired-means sign-flip randomization, or ANOVA randomization) and adapt it to a new question of your choosing using any dataset from the `openintro` package (or your own). At minimum:
+
+1.  State $H_0$ and $H_A$.
+2.  Write and run the randomization simulation (don't just call `t.test()`/`aov()`).
+3.  Report your simulated p-value and conclusion.
+4.  Confirm with the matching mathematical-model function.
+
+```{r exercise}
+# TODO: your own simulation-based test
+
+```
