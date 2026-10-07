@@ -1,0 +1,287 @@
+---
+title: "Homework: Tables, Means, ANOVA, and Regression Inference"
+subtitle: "IMS Chapters 18-22 and 24-26 (even-numbered exercises)"
+author: "YOUR NAME HERE"
+format:
+  html:
+    self-contained: true
+    toc: true
+---
+
+## Instructions
+
+- These are adapted from the even-numbered exercises in IMS Chapters 18-22 and 24-26.
+- Show your work for every computation, not just a final number. State conclusions **in context**.
+- You may use R as a calculator (`pt()`, `qt()`, `pchisq()`, `pf()`, `pnorm()`, `chisq.test()`). Use $\alpha = 0.05$ unless told otherwise.
+- When finished, **render this file to HTML** and submit the `.html` file.
+
+```{r setup, message=FALSE}
+library(tidyverse)
+library(openintro)
+```
+
+------------------------------------------------------------------------
+
+# Chapter 18: Inference for Two-Way Tables
+
+## Q1. Lizard habitats, data
+
+In order to assess whether habitat conditions are related to the sunlight choices a lizard makes for resting, Western fence lizards (*Sceloporus occidentalis*) were observed across three different microhabitats. (Adolph 1990; Asbury and Adolph 2007)
+
+| site | sun | partial | shade | Total |
+|----------|:---:|:---:|:---:|:---:|
+| desert | 16 | 32 | 71 | 119 |
+| mountain | 56 | 36 | 15 | 107 |
+| valley | 42 | 40 | 24 | 106 |
+| **Total** | 114 | 108 | 110 | 332 |
+
+a.  If the variables describing the habitat and the amount of sunlight are independent, what proportion of lizards (total) would be expected in each of the three sunlight categories?
+b.  Given the proportions of each sunlight condition, how many lizards of each site would you expect to see in the sun? in the partial sun? in the shade?
+c.  Compare the observed (original data) and expected (part b) tables. From a first glance, does it seem as though the habitat and choice of sunlight may be associated?
+d.  Regardless of your answer to part (c), is it possible to tell from looking only at the expected and observed counts whether the two variables are associated?
+
+```{r q1}
+# Optional: check your work in R
+
+```
+
+## Q2. Sleep deprived transportation workers
+
+The National Sleep Foundation conducted a survey on the sleep habits of randomly sampled transportation workers and randomly sampled non-transportation workers that serve as a "control" for comparison. (National Sleep Foundation 2012) The results of the survey are shown below. Conduct a hypothesis test to evaluate if these data provide evidence of an association between sleep levels and profession.
+
+| Profession | Less than 6 hours | 6 to 8 hours | More than 8 hours | Total |
+|-------------------------|:---:|:---:|:---:|:---:|
+| Non-transportation workers | 35 | 193 | 64 | 292 |
+| Transportation workers | 104 | 499 | 192 | 795 |
+| **Total** | 139 | 692 | 256 | 1,087 |
+
+*(State hypotheses, check conditions, report the expected counts, $X^2$, df, p-value, and a conclusion in context.)*
+
+```{r q2}
+# TODO
+
+```
+
+------------------------------------------------------------------------
+
+# Chapter 19: Inference for a Single Mean
+
+## Q3. Play the piano
+
+Georgianna claims that in a small city renowned for its music school, the average child takes less than 5 years of piano lessons. We have a random sample of 20 children from the city, with a mean of 4.6 years of piano lessons and a standard deviation of 2.2 years.
+
+a.  Evaluate Georgianna's claim (or that the opposite might be true) using a hypothesis test.
+b.  Construct a 95% confidence interval for the number of years students in this city take piano lessons, and interpret it in context of the data.
+c.  Do your results from the hypothesis test and the confidence interval agree? Explain your reasoning.
+
+```{r q3}
+# TODO
+
+```
+
+## Q4. Interpreting confidence intervals for a population mean
+
+For each of the following statements, indicate if they are a true or false interpretation of the confidence interval. If false, provide a reason or correction to the misinterpretation.
+
+You collect a large sample and calculate a 95% confidence interval for the average number of cans of soda consumed annually per adult in the US to be (440 cans, 520 cans), i.e., on average, adults in the US consume just under two cans of soda per day.
+
+a.  95% of adults in the US consume between 440 and 520 cans of soda per year.
+b.  There is a 95% probability that the true population average per adult yearly soda consumption is between 440 and 520 cans.
+c.  The true population average per adult yearly soda consumption is between 440 and 520 cans, with 95% confidence.
+d.  The average soda consumption of the people who were sampled is between 440 and 520 cans of soda per year, with 95% confidence.
+
+------------------------------------------------------------------------
+
+# Chapter 20: Comparing Two Independent Means
+
+## Q5. Diamonds, mathematical test
+
+We have data on two random samples of diamonds: one with diamonds that weigh 0.99 carats and one with diamonds that weigh 1 carat. Each sample has 23 diamonds. Sample statistics for the price per carat of diamonds in each sample are provided below. Conduct a hypothesis test using a mathematical model to evaluate if there is a difference between the prices per carat of diamonds that weigh 0.99 carats and diamonds that weigh 1 carat. Make sure to state your hypotheses clearly, check relevant conditions, and interpret your results in context of the data. (Wickham 2016)
+
+|             | Mean   | SD     | n  |
+|-------------|:------:|:------:|:--:|
+| 0.99 carats | \$44.51 | \$13.32 | 23 |
+| 1 carat     | \$57.20 | \$18.19 | 23 |
+
+```{r q5}
+# TODO
+
+```
+
+## Q6. Fuel efficiency in the city
+
+Each year the US Environmental Protection Agency (EPA) releases fuel economy data on cars manufactured in that year. Below are summary statistics on fuel efficiency (in miles/gallon) from random samples of cars with manual and automatic transmissions manufactured in 2021. Do these data provide strong evidence of a difference between the average fuel efficiency of cars with manual and automatic transmissions in terms of their average city mileage? (US DOE EPA 2021)
+
+| CITY      | Mean | SD   | n  |
+|-----------|:----:|:----:|:--:|
+| Automatic | 17.4 | 3.44 | 25 |
+| Manual    | 22.7 | 4.58 | 25 |
+
+```{r q6}
+# TODO
+
+```
+
+------------------------------------------------------------------------
+
+# Chapter 21: Comparing Paired Means
+
+## Q7. Paired or not? II
+
+In each of the following scenarios, determine if the data are paired. Explain your reasoning.
+
+a.  We would like to know if Intel's stock and Southwest Airlines' stock have similar rates of return. To find out, we take a random sample of 50 days, and record Intel's and Southwest's stock on those same days.
+b.  We randomly sample 50 items from Target stores and note the price for each. Then we visit Walmart and collect the price for each of those same 50 items.
+c.  A school board would like to determine whether there is a difference in average SAT scores for students at one high school versus another high school in the district. To check, they take a simple random sample of 100 students from each high school.
+
+## Q8. Friday the 13th, accidents
+
+In the early 1990s, researchers in the UK collected data on the number of traffic-accident-related emergency room (ER) admissions on Friday the 13th, with the goal of addressing issues of how superstitions regarding Friday the 13th affect human behavior and whether Friday the 13th is an unlucky day. Sample statistics are below, where the difference is the ER admissions on the 6th minus the ER admissions on the 13th. (Scanlon et al. 1993)
+
+|            | n | Mean | SD |
+|------------|:-:|:----:|:--:|
+| sixth      | 6 | 8    | 3  |
+| thirteenth | 6 | 11   | 4  |
+| diff       | 6 | $-3$ | 3  |
+
+a.  Conduct a hypothesis test using mathematical models to evaluate if there is a difference between the average numbers of traffic-accident-related emergency room admissions between Friday the 6th and Friday the 13th.
+b.  Calculate a 95% confidence interval using mathematical models for the difference between the average numbers of traffic-accident-related emergency room admissions between Friday the 6th and Friday the 13th.
+c.  The conclusion of the original study states, "Friday 13th is unlucky for some. The risk of hospital admission as a result of a transport accident may be increased by as much as 52%. Staying at home is recommended." Do you agree with this statement? Explain your reasoning.
+
+```{r q8}
+# TODO
+
+```
+
+------------------------------------------------------------------------
+
+# Chapter 22: Comparing Many Means (ANOVA)
+
+## Q9. Teaching descriptive statistics
+
+A study compared five different methods for teaching descriptive statistics. The five methods were traditional lecture and discussion, programmed textbook instruction, programmed text with lectures, computer instruction, and computer instruction with lectures. 45 students were randomly assigned, 9 to each method. After completing the course, students took a 1-hour exam.
+
+a.  What are the hypotheses for evaluating if the average test scores are different for the different teaching methods?
+b.  What are the degrees of freedom associated with the $F$-test for evaluating these hypotheses?
+c.  Suppose the p-value for this test is 0.0168. What is the conclusion?
+
+## Q10. Student performance across discussion sections
+
+A professor who teaches a large introductory statistics class (197 students) with eight discussion sections would like to test if student performance differs by discussion section, where each discussion section has a different teaching assistant. The summary table below shows the average final exam score for each discussion section as well as the standard deviation of scores and the number of students in each section.
+
+|      | Sec 1 | Sec 2 | Sec 3 | Sec 4 | Sec 5 | Sec 6 | Sec 7 | Sec 8 |
+|------|:-----:|:-----:|:-----:|:-----:|:-----:|:-----:|:-----:|:-----:|
+| Mean | 92.94 | 91.11 | 91.80 | 92.45 | 89.30 | 88.30 | 90.12 | 93.35 |
+| SD   | 4.21  | 5.58  | 3.43  | 5.92  | 9.32  | 7.27  | 6.93  | 4.57  |
+| n    | 33    | 19    | 10    | 29    | 33    | 10    | 32    | 31    |
+
+The ANOVA output below can be used to test for differences between the average scores from the different discussion sections.
+
+| term | df | sumsq | meansq | statistic | p.value |
+|----------|:---:|:-----:|:-----:|:----:|:-----:|
+| section | 7 | 525 | 75.0 | 1.87 | 0.077 |
+| Residuals | 189 | 7,584 | 40.1 | | |
+| Total | 196 | 8,109 | | | |
+
+Conduct a hypothesis test to determine if these data provide convincing evidence that the average score varies across some (or all) groups. Check conditions and describe any assumptions you must make to proceed with the test.
+
+------------------------------------------------------------------------
+
+# Chapter 24: Inference for Linear Regression (One Predictor)
+
+## Q11. Murders and poverty, mathematical test
+
+The table below shows the output of a linear model predicting annual murders per million (`annual_murders_per_mil`) from percentage living in poverty (`perc_pov`) in a random sample of 20 metropolitan areas.
+
+| term | estimate | std.error | statistic | p.value |
+|-----------|:------:|:----:|:-----:|:-------:|
+| (Intercept) | $-29.90$ | 7.79 | $-3.84$ | 0.0012 |
+| perc_pov | 2.56 | 0.39 | 6.56 | $<0.0001$ |
+
+a.  What are the hypotheses for evaluating whether the slope of the model predicting annual murder rate from poverty percentage is different than 0?
+b.  State the conclusion of the hypothesis test from part (a) in context. What does this say about whether poverty percentage is a useful predictor of annual murder rate?
+c.  Calculate a 95% confidence interval for the slope of poverty percentage, and interpret it in context.
+d.  Do your results from the hypothesis test and the confidence interval agree? Explain your reasoning.
+
+```{r q11}
+# TODO
+
+```
+
+## Q12. I heart cats
+
+Researchers collected data on heart and body weights of 144 domestic adult cats. The table below shows the output of a linear model predicting heart weight (measured in grams) from body weight (measured in kilograms) of these cats. (The `cats` data are in the `MASS` package.)
+
+| term | estimate | std.error | statistic | p.value |
+|-----------|:------:|:-----:|:------:|:-------:|
+| (Intercept) | $-0.357$ | 0.692 | $-0.515$ | 0.6072 |
+| Bwt | 4.034 | 0.250 | 16.119 | $<0.0001$ |
+
+a.  What are the hypotheses for evaluating whether body weight is positively associated with heart weight in cats?
+b.  State the conclusion of the hypothesis test from part (a) in context.
+c.  Calculate a 95% confidence interval for the slope of body weight, and interpret it in context.
+d.  Do your results from the hypothesis test and the confidence interval agree? Explain your reasoning.
+
+```{r q12}
+# TODO
+
+```
+
+------------------------------------------------------------------------
+
+# Chapter 25: Inference for Multiple Regression
+
+## Q13. GPA, mathematical interval
+
+A survey of 55 Duke University students asked about their GPA (`gpa`), number of hours they study weekly (`studyweek`), number of hours they sleep nightly (`sleepnight`), and whether they go out more than two nights a week (`out_mt2`). We use these data to build a model predicting GPA from the other variables. A summary of the model is shown below. Note that `out_mt2` is 1 if the student goes out more than two nights a week, and 0 otherwise.
+
+| term | estimate | std.error | statistic | p.value |
+|-----------|:-----:|:-----:|:------:|:-------:|
+| (Intercept) | 3.508 | 0.347 | 10.114 | $<0.0001$ |
+| studyweek | 0.002 | 0.004 | 0.400 | 0.6908 |
+| sleepnight | 0.000 | 0.047 | 0.008 | 0.994 |
+| out_mt2 | 0.151 | 0.097 | 1.551 | 0.127 |
+
+a.  Calculate a 95% confidence interval for the coefficient of `out_mt2` (going out more than two nights a week) in the model, and interpret it in the context of the data.
+b.  Would you expect a 95% confidence interval for the slope of the remaining variables to include 0? Explain your reasoning.
+
+```{r q13}
+# TODO
+
+```
+
+## Q14. Difficult encounters
+
+A study was conducted at a university outpatient primary care clinic in Switzerland to identify factors associated with difficult doctor-patient encounters. The data consist of 527 patient encounters, conducted by the 27 medical residents employed at the clinic. After each encounter, the attending physician completed two questionnaires: the Difficult Doctor Patient Relationship Questionnaire (DDPRQ-10) and the Patient's Vulnerability Grid (PVG). A higher score on the DDPRQ-10 indicates a more difficult encounter. The maximum possible score is 60 and encounters with score 30 and higher are considered difficult. A model was fit to predict DDPRQ-10 score from features of the attending physician: age, sex (male or not), and years of training.
+
+| term | estimate | std.error | statistic | p.value |
+|-----------|:------:|:-----:|:------:|:-----:|
+| (Intercept) | 30.594 | 2.886 | 10.601 | $<0.0001$ |
+| age | $-0.016$ | 0.104 | $-0.157$ | 0.876 |
+| sexMale | $-0.535$ | 0.781 | $-0.686$ | 0.494 |
+| yrs_train | 0.096 | 0.215 | 0.445 | 0.656 |
+
+a.  The intercept of the model is 30.594. What is the age, sex, and years of training of a physician whom this model would predict to have a DDPRQ-10 score of 30.594?
+b.  Is there evidence of a discernible association between DDPRQ-10 score and any of the physician features?
+
+------------------------------------------------------------------------
+
+# Chapter 26: Inference for Logistic Regression
+
+## Q15. Marijuana use in college
+
+Researchers studying whether the value systems of adolescents conflict with those of their parents asked 445 college students if they use marijuana. They also asked the students' parents if they used marijuana when they were in college. Based on the regression output shown below for predicting student drug use from parent drug use, evaluate whether parents' marijuana usage is a discernible predictor of their kids' marijuana usage. State the hypotheses, the test statistic, the p-value, and the conclusion in context of the data and the research question. (Ellis and Stone 1979)
+
+| term | estimate | std.error | statistic | p.value |
+|-------------|:------:|:-----:|:-----:|:-------:|
+| (Intercept) | $-0.405$ | 0.133 | $-3.04$ | 0.0023 |
+| parentsused | 0.791 | 0.194 | 4.09 | $<0.0001$ |
+
+## Q16. Treating heart attacks
+
+Researchers studying the effectiveness of Sulfinpyrazone in the prevention of sudden death after a heart attack conducted a randomized experiment on 1,475 patients. Based on the regression output shown below for predicting the outcome (died or lived, where success is defined as lived) from the treatment group (control and treatment), evaluate whether treatment group is a discernible predictor of the outcome. State the hypotheses, the test statistic, the p-value, and the conclusion in context of the data and the research question. (Anturane Reinfarction Trial Research Group 1980)
+
+| term | estimate | std.error | statistic | p.value |
+|---------------|:-----:|:-----:|:-----:|:-------:|
+| (Intercept) | 2.431 | 0.135 | 18.05 | $<0.0001$ |
+| grouptreatment | 0.395 | 0.210 | 1.89 | 0.0594 |
