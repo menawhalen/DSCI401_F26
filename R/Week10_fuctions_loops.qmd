@@ -1,0 +1,1084 @@
+---
+title: "Functions, Loops, and Iteration"
+format:
+  html:
+    self-contained: true
+    toc: true
+editor: visual
+execute:
+  warning: false
+  message: false
+---
+
+```{r setup}
+library(tidyverse)
+library(palmerpenguins)
+data("penguins")
+```
+
+## File Pathways
+
+Computers are not as smart as you think and you have to tell it exactly what you want it to do and exactly where to look for things.
+
+A file pathway is like a roadmap that guides R to locate your data files on your computer. It's similar to giving directions to someone using street names and landmarks. There are two main types of file pathways:
+
+- Absolute Pathway: This is the complete pathway starting from the root directory of your computer. It's like giving GPS coordinates for a location.
+
+Example: "C:/Users/YourUsername/Documents/data/file.csv"
+
+- Relative Pathway: This is the pathway relative to the current *working directory* in R. It's like giving directions based on your current location.
+
+Example: "data/file.csv"
+
+On Windows, write paths with forward slashes (`/`) or doubled backslashes (`\\`). A single backslash is a special character in R strings and will cause an error.
+
+### Working Directory
+
+The working directory is the location on your computer where R is currently operating. When you read or write files, R will look for them in this directory by default. This makes it important to know your working directory, especially when working with data files.
+
+You can use the `getwd()` function to check your current working directory, and the `setwd()` function to set a new one. We do not recommend `setwd()` in scripts you share, because the path only exists on your computer. Use a project and `here()` instead (below).
+
+```{r wd}
+# Check the current working directory
+getwd()
+```
+
+```{r wd_set, eval=FALSE}
+# Set a new working directory (shown for reference, not recommended)
+setwd("path/to/your/new/directory")
+```
+
+Before you read a file, you can check that R can see it:
+
+```{r wd_check, eval=FALSE}
+file.exists("data/survey.csv")   # TRUE if R can find it from the working directory
+list.files("data")               # lists the files inside the data folder
+list.files()                     # lists the files in the working directory
+```
+
+If you see the error `cannot open file 'survey.csv': No such file or directory`, check (1) `getwd()`, (2) the spelling and file extension, and (3) that the file is really in the folder you think it is.
+
+### Organizing Data:
+
+It's a good practice to organize your data in a separate folder within your R project. This keeps things tidy and helps avoid confusion.
+
+- Working in Projects: When you are working in a project the working directory is set for you where the project is located on your computer.
+
+- Create a Data Folder: In your R project directory, create a folder named "data" to store your datasets.
+
+- Place Data Files: Put your dataset files (CSV, Excel, etc.) inside the "data" folder.
+
+### Here Package
+
+File paths in R often break when you switch computers, change folders, or share code with others. Especially when you don't know their file structure.
+
+Example of a brittle path:
+
+```{r brittle, eval=FALSE}
+read_csv("/Users/mena/Downloads/data.csv")
+```
+
+What `here()` does:
+
+- Automatically finds the root of your project (where your .Rproj file or Git repo is).
+
+- Builds file paths relative to that root, so you don't have to type long paths.
+
+- This makes your code portable and reproducible.
+
+In an example work flow
+
+```         
+my_project/
+├── data/
+│   └── survey.csv
+├── scripts/
+│   └── analysis.R
+└── my_project.Rproj
+```
+
+You could use code:
+
+```{r here_ex, eval=FALSE}
+library(here)
+data <- read_csv(here("data", "survey.csv"))
+```
+
+`here()` returns the full pathway like
+
+```         
+"/Users/mena/OneDrive/my_project/data/survey.csv"
+```
+
+This is helpful when working with collaborations where you don't know where they are working beyond the project, especially across Mac, Windows, Linux systems.
+
+#### Activity
+
+1.  Get into groups 2-3
+2.  Everyone download some type of datafile (csv)
+3.  One member load the data using `read.csv()` from the downloads folder. Another member place it into the data folder and load the data. Swap code and run. (Check working directory)
+
+## Conditional Statements
+
+Conditional statements are an essential part of programming that allow you to control the flow of your code based on certain conditions. In R, there are primarily three ways to implement conditional statements: `if`, `if else`, and the `ifelse()` function (plus `case_when()` from dplyr for many categories).
+
+### If Statements
+
+The if statement allows you to execute a block of code only if a given condition is true.
+
+```{r if}
+sky <- "sunny"
+if (sky == "sunny"){
+  print("Leave your umbrella at home!")
+}
+
+sky <- "cloudy"
+if (sky == "sunny"){
+  print("Leave your umbrella at home!")
+}
+```
+
+The second block prints nothing, because the condition is `FALSE`. A condition is any expression that gives a single `TRUE` or `FALSE`. The comparison operators are `==` (equal), `!=` (not equal), `<`, `>`, `<=`, and `>=`.
+
+### If-Else Statements
+
+The if else statement extends the if statement to execute different blocks of code based on whether a condition is true or false.
+
+```{r if_else}
+number <- -3
+
+if (number > 0) {
+  print("The number is positive.")
+} else if (number < 0) {
+  print("The number is negative.")
+} else {
+  print("The number is zero.")
+}
+```
+
+R checks the conditions from top to bottom and runs only the first block whose condition is true, so the order matters.
+
+#### Worked example: even or odd
+
+The remainder operator `%%` gives what is left after division. A number is even when its remainder after dividing by 2 is 0.
+
+```{r even_odd}
+7 %% 2     # 1
+10 %% 2    # 0
+17 %/% 5   # integer division: 3
+
+num <- 71
+if (num %% 2 == 0) {
+  print("Even")
+} else {
+  print("Odd")
+}
+```
+
+#### Worked example: combining conditions
+
+Use `&&` (and) and `||` (or) inside an `if`, where each side is a single `TRUE` or `FALSE`.
+
+```{r combine}
+temp <- 72
+raining <- FALSE
+
+if (temp > 65 && !raining) {
+  print("Great day for a walk.")
+} else if (temp > 65 && raining) {
+  print("Warm, but take an umbrella.")
+} else {
+  print("Stay in and code.")
+}
+```
+
+The single versions `&` and `|` work on whole vectors, one element at a time. Those are the ones to use inside `filter()` and `ifelse()`. An `if` can only handle one value, so giving it a vector is an error in current versions of R:
+
+```{r if_vec, eval=FALSE}
+x <- c(-2, 3, 0)
+if (x > 0) print("positive")   # Error: the condition has length > 1
+```
+
+That is the reason `ifelse()` exists.
+
+### Ifelse Function
+
+This is for when you want to use if else statements repeatedly to return a vector.
+
+```{r ifelse}
+numbers <- c(-2, 3, 0, -5, 7)
+positive_indicator <- ifelse(numbers > 0, "Positive", "Not Positive")
+print(positive_indicator)
+```
+
+Its three arguments are the test, the value when the test is `TRUE`, and the value when it is `FALSE`. It works on a whole vector at once, so no loop is needed.
+
+### Case_when: more than two outcomes
+
+When you have several categories, nesting `ifelse()` gets messy. `case_when()` reads top to bottom, and the first matching condition wins. `TRUE ~ ...` at the end catches everything left over.
+
+```{r case_when}
+scores <- c(95, 85, 72, 60, 12)
+
+case_when(scores >= 90 ~ "A",
+          scores >= 80 ~ "B",
+          scores >= 70 ~ "C",
+          scores >= 60 ~ "D",
+          TRUE ~ "F")
+```
+
+It works inside `mutate()` too. Here we make size categories for penguins:
+
+```{r case_when_peng}
+penguins %>%
+  mutate(size = case_when(body_mass_g < 3500 ~ "small",
+                          body_mass_g < 4500 ~ "medium",
+                          body_mass_g >= 4500 ~ "large")) %>%
+  count(species, size)
+```
+
+Rows with a missing `body_mass_g` get `NA` for `size`, because none of the conditions can be checked.
+
+## Loops
+
+### For Loops
+
+A for loop is a fundamental programming construct that allows you to repeat a block of code a specified number of times. It's especially useful when you need to perform the same operation multiple times or iterate over a sequence of elements, such as elements in a list, vector, or data frame.
+
+The basic structure of a for loop looks like this:
+
+```         
+  for (variable in sequence) {
+    # code to be executed in each iteration
+  }
+```
+
+Here's a breakdown of the components:
+
+- variable: This is a variable that takes on each value in the sequence during each iteration of the loop.
+- sequence: This defines the range or collection of values that the loop will iterate over. It could be a sequence of numbers (1:10), a vector, a list, or any other iterable data structure.
+
+The code block within the curly braces {} contains the operations you want to perform in each iteration of the loop.
+
+Examples of for loops
+
+```{r loops}
+# Consecutive indexes
+for (i in 1:10){
+  print(i)
+}
+
+for (i in 10:1){
+  print(i)
+}
+
+# Don't need to be consecutive!
+for (i in c(2, 3, 5, 7, 11)){
+  print(i)
+}
+
+## Doesn't have to be a number can be a vector of strings
+for (i in c("mike", "mary", "tom", "sue")){
+  print(i)
+}
+```
+
+#### Worked example: build a message with `cat()` and `paste()`
+
+`print()` shows a value with its quotes and index. `cat()` is better for building readable output, and `\n` starts a new line.
+
+```{r cat}
+for (name in c("mike", "mary", "tom")) {
+  cat("Hello,", name, "\n")
+}
+
+for (i in 1:3) {
+  print(paste("Row", i))
+}
+```
+
+#### Worked example: the accumulator pattern
+
+Start with a total of zero and update it on each pass. This is how `sum()` works under the hood.
+
+```{r accumulator}
+my_vec <- c(2, 7, 3, 5, 2, 5, 9, 4, 24, 74, 26, 26, 84)
+
+total <- 0
+for (v in my_vec) {
+  total <- total + v
+}
+total          # 271
+sum(my_vec)    # the built-in gives the same answer
+```
+
+#### Worked example: saving results from a loop
+
+Printing is fine for looking, but usually you want to **keep** each result. Create an empty vector first, then fill in one position per pass. `seq_along(x)` gives `1, 2, ..., length(x)` and is safer than `1:length(x)` (which misbehaves when `x` is empty).
+
+```{r save_results}
+squares <- numeric(length(my_vec))     # an empty numeric vector of the right length
+
+for (i in seq_along(my_vec)) {
+  squares[i] <- my_vec[i]^2
+}
+squares
+```
+
+Since `^` already works on a whole vector, `my_vec^2` gives the same thing with no loop. R is *vectorized*, so reach for a loop only when each step really needs its own code.
+
+```{r vectorized}
+my_vec^2
+```
+
+#### Worked example: a loop with an `if`
+
+Count how many values are even and how many are odd.
+
+```{r loop_if}
+evens <- 0
+odds <- 0
+for (v in my_vec) {
+  if (v %% 2 == 0) {
+    evens <- evens + 1
+  } else {
+    odds <- odds + 1
+  }
+}
+evens   # 8
+odds    # 5
+```
+
+#### Worked example: looping over columns of a data frame
+
+`df[[name]]` pulls out a column by its name, so a loop over column names visits every column.
+
+```{r loop_cols}
+measure_cols <- c("bill_length_mm", "bill_depth_mm", "flipper_length_mm", "body_mass_g")
+
+for (col in measure_cols) {
+  cat(col, ": mean =", round(mean(penguins[[col]], na.rm = TRUE), 2), "\n")
+}
+```
+
+#### `next` and `break`
+
+`next` skips to the next pass of the loop, and `break` ends the loop early.
+
+```{r next_break}
+for (v in my_vec) {
+  if (v < 5) next          # skip small values
+  if (v > 30) break        # stop once a value is bigger than 30
+  cat(v, "")
+}
+```
+
+### While Loops
+
+A `while` loop repeats as long as its condition is `TRUE`. Use it when you do not know in advance how many repeats you need. Something inside the loop must change the condition, or it will run forever (press the stop button or Esc to interrupt it).
+
+```{r while}
+x <- 1
+while (x <= 5) {
+  print(x)
+  x <- x + 1
+}
+x   # the loop ended once x reached 6
+```
+
+#### Worked example: growth until a target
+
+How many years until 100 dollars growing at 7 percent a year doubles?
+
+```{r while_growth}
+balance <- 100
+years <- 0
+while (balance < 200) {
+  balance <- balance * 1.07
+  years <- years + 1
+}
+years
+balance
+```
+
+**Choosing a loop:** use `for` when you know what to loop over (a vector, the rows, the columns). Use `while` when you loop until something happens.
+
+## Functions
+
+### Why Build Functions?
+
+Functions are the building blocks of code. Just as we break down tasks into smaller steps in everyday life, functions break down complex coding tasks into manageable units. But why should we bother with building your own functions when so many others exist?
+
+- Modularity: Functions help us organize code by grouping related actions together. This makes our code more structured, easier to read, and simpler to maintain.
+
+- Reusability: Once you've built a function to perform a specific task, you can use it as many times as you need without rewriting the same code. This not only saves time but also reduces the chances of errors.
+
+- Efficiency: Functions promote efficient code development by enabling us to focus on solving specific problems without getting bogged down in larger program logic.
+
+- Debugging: When an error occurs, functions help narrow down the problematic part of the code, making it easier to identify and fix issues.
+
+A good rule of thumb: if you have copied and pasted the same code three times, write a function.
+
+### Function Syntax
+
+At its core, a function is a self-contained block of code designed to perform a specific task. Like a recipe, a function takes in ingredients (inputs or arguments) and produces a result (output). Let's break down the basic structure of a function in R:
+
+```         
+# Defining a Function
+function_name <- function(argument1, argument2, ...) {
+  # Code to perform the task
+  return(result)
+}
+```
+
+- function_name: Choose a meaningful name for your function, describing what it does.
+- argument1, argument2, ...: These are placeholders for the values (arguments) that the function will work with.
+- return(result): After performing the task, the function uses the return statement to provide the result.
+
+```{r basic_func}
+
+## find the max between two numbers
+## takes in two number inputs
+find_max <- function(a, b) {
+  if (a > b) {
+    return(a)
+  } else {
+    return(b)
+  }
+}
+
+find_max(1,2)
+find_max(5,3)
+
+## checks even or odd
+## take in one number as the input
+check_even_odd <- function(num) {
+  if (num %% 2 == 0) {
+    return("Even")
+  } else {
+    return("Odd")
+  }
+}
+
+check_even_odd(71)
+check_even_odd(51)
+```
+
+Defining a function does not run it. It just stores it, like saving a recipe. You run it by **calling** it with arguments. If you leave out `return()`, R returns the value of the last line, so these two functions are the same:
+
+```{r implicit_return}
+square <- function(x) {
+  return(x^2)
+}
+
+square2 <- function(x) {
+  x^2
+}
+
+square(4)
+square2(4)
+```
+
+### Worked examples
+
+#### A conversion function
+
+```{r c_to_f}
+c_to_f <- function(celsius) {
+  celsius * 9 / 5 + 32
+}
+
+c_to_f(0)
+c_to_f(100)
+c_to_f(c(0, 20, 37, 100))   # works on a whole vector, because * and + are vectorized
+```
+
+#### Default arguments
+
+Give an argument a default value with `=`. Callers can skip it, or override it.
+
+```{r defaults}
+tip_total <- function(bill, rate = 0.18) {
+  bill * (1 + rate)
+}
+
+tip_total(50)                # uses the default 18 percent
+tip_total(50, rate = 0.20)   # override by name
+tip_total(rate = 0.20, bill = 50)   # named arguments can come in any order
+```
+
+#### A function with an `if` / `else if` chain
+
+```{r letter_grade}
+letter_grade <- function(score) {
+  if (score >= 90) {
+    return("A")
+  } else if (score >= 80) {
+    return("B")
+  } else if (score >= 70) {
+    return("C")
+  } else if (score >= 60) {
+    return("D")
+  } else {
+    return("F")
+  }
+}
+
+letter_grade(95)
+letter_grade(72)
+letter_grade(12)
+```
+
+#### A function with a loop
+
+```{r count_evens}
+count_evens <- function(values) {
+  count <- 0
+  for (v in values) {
+    if (v %% 2 == 0) {
+      count <- count + 1
+    }
+  }
+  return(count)
+}
+
+count_evens(my_vec)
+count_evens(c(1, 3, 5))
+```
+
+#### Returning more than one value
+
+A function returns one object, but that object can be a named vector or a list holding several things.
+
+```{r multi_return}
+describe <- function(x) {
+  c(mean = mean(x), sd = sd(x), n = length(x))
+}
+
+describe(my_vec)
+
+# a list can hold different kinds of things
+describe_list <- function(x) {
+  list(summary = summary(x), n_missing = sum(is.na(x)))
+}
+describe_list(penguins$body_mass_g)
+```
+
+#### A function that takes a data frame
+
+Pass the column name as a string and use `[[ ]]` to pull it out.
+
+```{r col_mean}
+col_mean <- function(df, col) {
+  mean(df[[col]], na.rm = TRUE)
+}
+
+col_mean(penguins, "body_mass_g")
+col_mean(penguins, "flipper_length_mm")
+```
+
+#### Variables inside a function stay inside
+
+Anything created inside a function exists only while the function runs. This is called *scope*, and it keeps functions from accidentally changing your other objects.
+
+```{r scope}
+f <- function() {
+  inner <- 5
+  inner * 2
+}
+
+f()
+exists("inner")   # FALSE: inner only lived inside f()
+```
+
+#### Why the functions above only take single values
+
+`find_max(c(1, 5), c(3, 2))` is an error, because `if` needs a single `TRUE` or `FALSE` (see the conditional section). For vectors, use a built-in that is already vectorized, such as `pmax()`, or use `ifelse()` inside the function.
+
+```{r pmax}
+pmax(c(1, 5), c(3, 2))
+```
+
+#### Test your function
+
+Before you trust a function, check it on cases where you know the answer. `stopifnot()` is silent when everything is `TRUE` and gives an error when something is not.
+
+```{r stopifnot}
+stopifnot(find_max(1, 2) == 2,
+          find_max(5, 3) == 5,
+          check_even_odd(71) == "Odd",
+          letter_grade(95) == "A",
+          count_evens(c(1, 3, 5)) == 0)
+```
+
+## Exercise!
+
+The height of a lego brick is 9.6 mm. We want to build a tower at a height closest to x m.(Remember 1000 mm in a m.)
+
+Imagine your starter code is: x=3 \# I want to build a tower that is \~ 3 m high
+
+1.  Write a statement to calculate how many bricks are needed.
+2.  Write code using a while loop to calculate the number of bricks needed.
+3.  Challenge: Can you add an argument to the function that will allow you to return a any unit you want.
+
+```{r lego_work}
+# your code here
+```
+
+::: {.callout-note collapse="true" title="Worked solution"}
+**1. One statement.** The tower height in mm is `1000 * x`, so divide by the brick height and round to the nearest whole brick.
+
+```{r lego1}
+x <- 3
+round(1000 * x / 9.6)    # 312
+```
+
+**2. A while loop.** Add bricks until the tower is at least as tall as the target.
+
+```{r lego2}
+bricks <- 0
+while (9.6 * bricks < 1000 * x) {
+  bricks <- bricks + 1
+}
+bricks    # 313
+```
+
+The two answers differ by one. With x = 3, the exact number is 312.5 bricks, so 312 bricks (2995.2 mm) and 313 bricks (3004.8 mm) are equally close to 3 m. `round()` gives the *closest* count (R rounds exact halves to the even number, which is 312). The loop stops at the first count that is *at least* as tall as the target, which is the same as `ceiling(1000 * x / 9.6)`. Which one you want depends on whether the tower must reach the height.
+
+**Put it in a function.** Wrapping the code lets you reuse it with any height:
+
+```{r lego_fun}
+num_of_bricks <- function(x) {
+  round(1000 * x / 9.6)
+}
+
+num_of_bricks(3)
+num_of_bricks(5)
+```
+
+**3. Challenge: choose the unit.** Store how many millimeters are in each unit, convert the target to mm, and divide by the brick height. A default of `"m"` keeps the original behavior.
+
+```{r lego_units}
+bricks_needed <- function(height, unit = "m") {
+  mm_per_unit <- c(mm = 1, cm = 10, m = 1000, ft = 304.8, inch = 25.4)
+
+  if (!unit %in% names(mm_per_unit)) {
+    stop("unit must be one of: ", paste(names(mm_per_unit), collapse = ", "))
+  }
+
+  target_mm <- height * mm_per_unit[[unit]]
+  round(target_mm / 9.6)
+}
+
+bricks_needed(3)              # 312, meters by default
+bricks_needed(3, "ft")        # 95
+bricks_needed(10, "cm")       # 10
+```
+:::
+
+## Iteration: Apply and Map
+
+So far we repeated work with loops. R also has functions whose whole job is to apply another function to many things at once. They are shorter than loops and make it harder to forget to save the results.
+
+### Three ways to do the same job
+
+Here is one task, squaring four numbers, three ways.
+
+```{r three_ways}
+values <- c(1, 2, 3, 4)
+
+# 1. a for loop
+squares <- numeric(length(values))
+for (i in seq_along(values)) {
+  squares[i] <- values[i]^2
+}
+squares
+
+# 2. sapply
+sapply(values, function(x) x^2)
+
+# 3. vectorized (the best choice when it exists)
+values^2
+```
+
+Use a vectorized operation when there is one. Use `sapply()` or `map()` when you need to apply your own function, especially one that does not vectorize on its own.
+
+### `apply` vs. `map`
+
+The apply family of functions (`apply`,`lapply`,`sapply`,`vapply`) has traditionally been a go-to tool for applying functions across rows or columns of data, or over elements in lists. While apply functions are still widely used, map functions from the `purrr` package offer similar functionality with additional benefits, like better compatibility with the pipe (`%>%`) and more intuitive outputs.
+
+### `apply` with Matrices and Data Frames
+
+`apply` is often used for applying functions over rows or columns in a matrix or data frame. For instance: Here's a brief overview of how `apply` functions work and how you might achieve similar outcomes using map.
+
+```{r apply_matrix}
+# Create a matrix
+matrix_data <- matrix(1:9, nrow = 3)
+matrix_data
+
+# Apply the `sum` function to each row (MARGIN = 1)
+row_sums <- apply(matrix_data, MARGIN = 1, FUN = sum)
+row_sums
+
+# Apply the `sum` function to each column (MARGIN = 2)
+col_sums <- apply(matrix_data, MARGIN = 2, FUN = sum)
+col_sums
+```
+
+In the example above:
+
+- `MARGIN = 1` applies the function to each row.
+
+- `MARGIN = 2` applies the function to each column.
+
+### `lapply`, `sapply`, and `vapply` for Lists and Vectors
+
+When working with lists or vectors, you can use `lapply` and `sapply`. These functions return the results in slightly different formats:
+
+- `lapply` returns a list.
+
+- `sapply` tries to simplify the result into a vector or matrix, if possible.
+
+- `vapply` is similar to `sapply`, but it requires you to specify the output type for more reliability.
+
+Example with `sapply`:
+
+```{r sapply}
+# Create a vector
+values <- c(1, 2, 3, 4)
+
+# Square each value using sapply
+squared_values <- sapply(values, function(x) x^2)
+squared_values
+```
+
+The same input with `lapply` and `vapply`:
+
+```{r lapply_vapply}
+lapply(values, function(x) x^2)                   # a list, one element per value
+vapply(values, function(x) x^2, numeric(1))       # a numeric vector; errors if a result is not one number
+```
+
+A data frame is a list of columns, so `sapply()` visits each column:
+
+```{r sapply_df}
+measure_cols <- c("bill_length_mm", "bill_depth_mm", "flipper_length_mm", "body_mass_g")
+
+sapply(penguins[, measure_cols], mean, na.rm = TRUE)     # extra arguments are passed along to mean()
+sapply(penguins[, measure_cols], function(x) sum(is.na(x)))   # missing values per column
+```
+
+A common base-R pattern is *split, then apply*: split a vector into groups, then summarize each group.
+
+```{r split_apply}
+sapply(split(penguins$body_mass_g, penguins$species), mean, na.rm = TRUE)
+```
+
+### Moving to `map` in the Pipe
+
+With the rise of the tidyverse, `map` has become a more popular option, especially within pipes, where it can be more readable and flexible. The `map` functions also include type-specific options (`map_dbl`, `map_chr`, etc.) to simplify results directly into vectors, like `sapply`.
+
+```{r map_intro}
+# Using map to achieve the same result
+library(purrr)
+
+squared_values_map <- map_dbl(values, ~ .x^2)
+squared_values_map
+```
+
+In `~ .x^2`, the `~` starts a short anonymous function and `.x` stands for the current element. In R 4.1 and later you can write the same thing as `\(x) x^2`.
+
+```{r map_lambda}
+map_dbl(values, \(x) x^2)
+```
+
+The suffix says what kind of vector you get back:
+
+| Function    | Returns               |
+|-------------|-----------------------|
+| `map()`     | a list (always works) |
+| `map_dbl()` | a numeric vector      |
+| `map_int()` | an integer vector     |
+| `map_chr()` | a character vector    |
+| `map_lgl()` | a logical vector      |
+
+```{r map_types}
+map_chr(c("mike", "mary", "tom"), toupper)
+map_lgl(values, ~ .x > 2)
+map_dbl(list(a = 1:5, b = c(10, 20, 30)), mean)   # names are kept
+```
+
+## Map
+
+The `map` function is a powerful tool in the tidyverse package that allows you to *apply a function to each element of a list or vector*, and then returns a list containing the results. It's particularly useful when you have repetitive tasks to perform on multiple elements. This function is part of the `purrr` package within the tidyverse.
+
+Here is an example of map working where we define a function that squares each item in a vector.
+
+```{r map_sq}
+# Create a list of values
+values <- c(2, 4, 6, 8)
+
+# Define a function to be applied
+square <- function(x) {
+  return(x^2)
+}
+
+# Use map to apply the function to each element
+result <- map(values, square)
+
+# The result is a list with squared values
+result
+## To get results back to a vector unlist()
+unlist(result)
+```
+
+You can use your own functions from the last section directly inside `map`:
+
+```{r map_own}
+map_chr(c(95, 85, 72, 60, 12), letter_grade)
+map_dbl(c(0, 37, 100), c_to_f)
+```
+
+The map function is especially handy when you have complex tasks, such as reading multiple files, performing calculations on multiple datasets, or creating multiple plots. It helps you avoid writing repetitive code and enhances the readability of your code.
+
+For instance, suppose you have a list of file names and you want to read each file and perform some operations on its content:
+
+```{r map_files, eval=FALSE}
+  files <- c("file1.csv", "file2.csv", "file3.csv")
+  
+  # Define a function to read and process a file
+  process_file <- function(filename) {
+    data <- read_csv(filename)
+    # Perform operations on 'data'
+    return(processed_data)
+  }
+  
+  # Use map to process each file
+  processed_files <- map(files, process_file)
+```
+
+### Map over the columns of a data frame
+
+`map_dbl()` on a data frame visits each column. Pair it with `select(where(is.numeric))` to keep only the numeric ones.
+
+```{r map_cols}
+penguins %>%
+  select(bill_length_mm, bill_depth_mm, flipper_length_mm, body_mass_g) %>%
+  map_dbl(~ mean(.x, na.rm = TRUE))
+```
+
+For this particular job (a summary of many columns) `dplyr` has a shortcut, `across()`, which returns a one-row data frame:
+
+```{r across}
+penguins %>%
+  summarise(across(c(bill_length_mm, bill_depth_mm, flipper_length_mm, body_mass_g),
+                   ~ mean(.x, na.rm = TRUE)))
+```
+
+### Practice with the `penguins` dataset
+
+`nest` is used to group data into a nested structure. When combined with map, you can apply a function to each nested group separately and return the results as a new column.
+
+```{r pen_map}
+penguins %>% 
+  group_by(sex) %>% 
+  summarise(mean_length = mean(bill_length_mm, na.rm = TRUE))
+
+ penguins %>% 
+  group_by(species) %>% 
+  nest() %>% 
+  mutate(mean_body_mass = map(data, ~ mean(.x$body_mass_g, na.rm = TRUE)),
+         mean_bill_length = map(data, ~ mean(.x$bill_length_mm, na.rm = TRUE)),
+         mean_bill_depth = map(data, ~ mean(.x$bill_depth_mm, na.rm = TRUE)))
+ 
+```
+
+(The first table has a row for `NA` because some penguins have a missing `sex`.) Each new column above is a list-column, because `map` always returns a list. In the `data` column, each cell holds that species' whole data frame.
+
+`map` returns a list where each element contains the output of applying the specified function to the corresponding element of the input data. It's useful when you expect the output to have different types or structures.
+
+`map_dbl` specifically returns a numeric vector. It's useful when you expect the output to be a numeric value, and it simplifies the output into a vector.
+
+```{r map_pen_dbl}
+ ## use map_dbl for number outputs
+  penguins %>% 
+  group_by(species) %>% 
+  nest() %>% 
+  mutate(mean_body_mass = map_dbl(data, ~ mean(.x$body_mass_g, na.rm = TRUE)),
+         mean_bill_length = map_dbl(data, ~ mean(.x$bill_length_mm, na.rm = TRUE)),
+         mean_bill_depth = map_dbl(data, ~ mean(.x$bill_depth_mm, na.rm = TRUE)))
+
+```
+
+### Mapping over Multiple Lists with `map2`
+
+Students can use `map2` to apply functions that need two input vectors. Here, we calculate the BMI for a list of weights and heights.
+
+```{r map2}
+weights <- c(60, 72, 90)
+heights <- c(1.65, 1.75, 1.80)
+
+# Define a function to calculate BMI
+calc_bmi <- function(weight, height) {
+  weight / (height^2)
+}
+
+# Use map2 to apply calc_bmi on both vectors
+bmis <- map2_dbl(weights, heights, calc_bmi)
+bmis
+```
+
+`map2` walks along both vectors at the same time (first weight with first height, and so on). For more than two inputs, `pmap()` takes a list of vectors.
+
+Now use a function we make with nesting and mapping together.
+
+```{r nest_map_funct}
+# Define a function to calculate mean and median flipper length
+## puts in a whole dataset (helpful for nest)
+
+calculate_stats <- function(data) {
+  mean_length <- mean(data$flipper_length_mm, na.rm = TRUE)
+  median_length <- median(data$flipper_length_mm, na.rm = TRUE)
+  
+  return(data.frame(mean_length, median_length))
+}
+
+# Group data by species and island
+## then use calculate_stats
+peng_stats <- penguins %>% 
+  group_by(species, island) %>% 
+  nest() %>% 
+  mutate(stats = map(data, calculate_stats)) 
+
+peng_stats
+## cant really see it
+## need to select and unnest the dataframe
+peng_stats %>% 
+  select(stats) %>%
+  unnest(stats)
+
+### another way
+
+penguins %>%
+  group_by(species, island) %>%
+  nest() %>%
+  mutate(
+    stats = map(data, ~ tibble(
+      mean_flipper = mean(.x$flipper_length_mm, na.rm = TRUE),
+      sd_flipper = sd(.x$flipper_length_mm, na.rm = TRUE),
+      mean_body_mass = mean(.x$body_mass_g, na.rm = TRUE),
+      sd_body_mass = sd(.x$body_mass_g, na.rm = TRUE)
+    ))
+  ) %>%
+  unnest(stats)
+```
+
+### Worked example: a simulation, three ways
+
+Repeating a random process many times is one of the most common reasons to iterate in statistics. Here we draw 1,000 random samples of size 30 from the (non-missing) penguin body masses and record each sample mean. This builds a sampling distribution.
+
+```{r sim_setup}
+mass <- penguins$body_mass_g[!is.na(penguins$body_mass_g)]
+n <- 30
+```
+
+```{r sim_loop}
+# 1. a for loop (create the empty vector first)
+set.seed(401)
+means_loop <- numeric(1000)
+for (i in 1:1000) {
+  means_loop[i] <- mean(sample(mass, n))
+}
+```
+
+```{r sim_replicate}
+# 2. replicate() is made for repeating a random process
+set.seed(401)
+means_rep <- replicate(1000, mean(sample(mass, n)))
+```
+
+```{r sim_map}
+# 3. map_dbl over 1:1000 (the .x is not used, we just need 1000 repeats)
+set.seed(401)
+means_map <- map_dbl(1:1000, ~ mean(sample(mass, n)))
+```
+
+All three do the same job, so with the same seed they give the same results. Check, and then compare the spread of the sample means with the theory ($\sigma / \sqrt{n}$):
+
+```{r sim_check}
+all.equal(means_loop, means_rep)
+all.equal(means_rep, means_map)
+
+sd(means_rep)            # spread of the sample means
+sd(mass) / sqrt(n)       # sigma / sqrt(n), the theoretical standard error
+
+ggplot(tibble(means = means_rep), aes(x = means)) +
+  geom_histogram(bins = 25, fill = "navy", color = "white") +
+  labs(x = "Sample mean body mass (g)",
+       y = "Count",
+       title = "Sampling distribution of the mean, n = 30")
+```
+
+### Which tool should I use?
+
+| Situation | Reach for |
+|--------------------------------------------|----------------------------|
+| The operation already works on whole vectors (`x^2`, `x > 3`, `sum(x)`) | just use it, no loop |
+| Two or more categories from a condition | `ifelse()` or `case_when()` |
+| Summarize several columns | `across()` inside `summarise()` |
+| Apply your own function to each element and get a vector | `sapply()` or `map_dbl()`, `map_chr()`, ... |
+| Apply a function to each group of a data frame | `nest()` + `map()` |
+| Repeat a random process | `replicate()` or `map_dbl()` |
+| Each step depends on the previous one, or you do not know how many steps | `for` or `while` loop |
+
+## Practice
+
+Write your code in the chunks below.
+
+**Practice 1.** Even or odd. Use a `for` loop over 1 to 10 and, for each number, print a line such as `3 is odd` or `4 is even` (use `cat()` and an `if`/`else`).
+
+```{r practice1}
+# your code here
+```
+
+**Practice 2.** Letter grades. Given `scores <- c(95, 85, 72, 60, 12)`, create a vector of letter grades (A for 90 and above, B for 80 to 89, C for 70 to 79, D for 60 to 69, F below 60) in one step, without a loop.
+
+```{r practice2}
+# your code here
+```
+
+**Practice 3.** Doubling money. You start with 100 dollars and the balance doubles every year. Use a `while` loop to find how many years it takes for the balance to go above 1000. Report the number of years and the final balance.
+
+```{r practice3}
+# your code here
+```
+
+**Practice 4.** BMI. Write a function `bmi(weight_kg, height_m)`. Use `map2_dbl()` to apply it to `weights <- c(60, 72, 90)` and `heights <- c(1.65, 1.75, 1.80)`, then use `case_when()` to label each BMI as under (\< 18.5), normal (\< 25), over (\< 30), or obese.
+
+```{r practice4}
+# your code here
+```
+
+**Practice 5.** A default argument. Write `tip_total(bill, rate = 0.18)` that returns the bill plus the tip. Call it with only a bill of 50, then with a 20 percent rate.
+
+```{r practice5}
+# your code here
+```
+
+**Practice 6.** Column means two ways. Find the mean of every numeric column in `penguins` (ignore missing values) using (a) `sapply()` on the four measurement columns and (b) `summarise()` with `across()`.
+
+```{r practice6}
+# your code here
+```
+
+**Practice 7.** Nest and map. For each species, use `nest()` and `map_dbl()` to compute the median body mass. Return a data frame with just `species` and the median.
+
+```{r practice7}
+# your code here
+```
+
+**Practice 8.** Simulation. Using the non-missing body masses, take 1000 random samples of size 10 and 1000 of size 50 (use `replicate()` and `set.seed(401)`), recording each sample mean. Compare the standard deviation of each set of means with the population standard deviation divided by the square root of n.
+
+```{r practice8}
+# your code here
+```
