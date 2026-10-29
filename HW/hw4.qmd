@@ -1,0 +1,47 @@
+---
+title: "Homework 6: Functions, Loops, and Conditionals"
+subtitle: "DSCI 401"
+format: html
+---
+
+Submit one rendered Quarto/R Markdown file with answers in **R and Python** for every question, plus links to your Colab notebooks.
+
+**Rule:** if you repeat a task more than twice, write a function and use a loop or `map` instead of copying and pasting. Comment your code.
+
+Data: HELPrct (`mosaicData` in R; course link/folder in Python) and the Cubs all-time data from the link/folder.
+
+## Question 1: A function and `map` (Cubs)
+
+The Cubs data has one row per season and a team name column `Tm`. The franchise has had several names.
+
+(a) Write a function `count_seasons(name)` that returns the number of seasons played under a team name.
+
+(b) Apply it to `"Chicago White Stockings"`, `"Chicago Colts"`, `"Chicago Orphans"`, and `"Chicago Cubs"` with `map_int()` in R and a `for` loop or list comprehension in Python.
+
+(c) Give your function a default argument `data` so it works on any data frame, and make it stop with a clear message if there is no `Tm` column.
+
+## Question 2: Conditionals and loops (HELPrct)
+
+(a) Write a function `cesd_category(x)` that returns `"severe"` if `x >= 32`, `"moderate"` if `x >= 16`, and `"low"` otherwise. Use `if` / `else if` / `else` (R) and `if` / `elif` / `else` (Python), not `case_when`.
+
+(b) Use a loop to apply it to every `cesd` score and count how many people fall in each category.
+
+## Question 3: One function, many groups
+
+(a) Write a function `sex_diff(data)` that returns the mean `cesd` for females minus the mean for males. If either sex has fewer than 5 people, return `NA` (R) or `None` (Python).
+
+(b) Run it on all of HELPrct.
+
+(c) We want the female-minus-male gap separately for each decade of age. Doing this by hand would mean copying the same code six times, so use a loop instead. For each decade (10-19, 20-29, ..., 60-69):
+
+1. Keep only the people in that decade.
+2. Run sex_diff on them.
+3. Print the decade, how many people were in it, and what sex_diff returned.
+
+Hint: if lo is the start of a decade, then the people you want have age >= lo and age < lo + 10. Loop over lo = 10, 20, 30, 40, 50, 60.
+
+(d) In 2 sentences: does the gap change across age ranges? Why did some ranges return `NA`/`None`?
+
+## Question 4: Reflection
+
+In 2-3 sentences: what did writing a function save you from doing, and where did you get stuck?

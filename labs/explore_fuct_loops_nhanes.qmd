@@ -1,0 +1,247 @@
+---
+title: "Lab: Functions and Maps with NHANES"
+format:
+  html:
+    self-contained: true
+    toc: true
+editor: source
+execute:
+  warning: false
+  message: false
+---
+
+## Overview
+
+Often you need to run **the same analysis for several groups**. You could copy and paste the same code three times, but that is slow and easy to get wrong. In this lab you will:
+
+1.  get the plot and the test working for **one** group,
+2.  turn that code into **functions**,
+3.  use `nest()` and `map()` to run the functions for **every age group**, and
+4.  do the same for a regression model.
+
+Write your answers to the questions in complete sentences **in context** and render to HTML at the end.
+
+| Part | Topic                                  | Time           |
+|------|----------------------------------------|----------------|
+| 1    | Get oriented (data is cleaned for you) | 8 minutes      |
+| 2    | One group, by hand                     | 10 minutes     |
+| 3    | Write the functions                    | 15 minutes     |
+| 4    | Map over the age groups                | 15 minutes     |
+| 5    | A model function, mapped               | 8 minutes      |
+| 6    | Reuse your functions on something new  | remaining time |
+
+## The data
+
+`NHANES` is from the US National Health and Nutrition Examination Survey, run by the CDC. We use the version in the `NHANES` package: 10,000 participants from the 2009-2010 and 2011-2012 surveys.
+
+| Variable | Meaning |
+|--------------------|----------------------------------------------------|
+| `Gender` | `male` or `female` |
+| `Age` | age in years |
+| `Race1` | self-reported race/ethnicity (5 groups) |
+| `BMI` | body mass index (kg/m\^2) |
+| `BPSysAve` | average systolic blood pressure (mmHg) |
+| `SleepHrsNight` | self-reported hours of sleep on weekdays |
+| `PhysActive` | participates in moderate or vigorous exercise (`Yes`/`No`) |
+
+```{r setup}
+library(tidyverse)
+library(NHANES)
+library(infer)
+library(broom)
+data(NHANES)
+```
+
+Useful reminders:
+
+| Idea | Code |
+|-----------------------|------------------------------------------------|
+| A function | `my_fun <- function(data, arg = default) { ...; return(result) }` |
+| Nest by group | `group_by(g) %>% nest()` gives one row per group with a `data` column |
+| Map over a column | `mutate(result = map(data, my_fun))` |
+| Map over two columns | `map2(data, g, ~ my_fun(.x, title = .y))` |
+| Open up the results | `unnest(result)` |
+| `infer` pipeline | `specify()`, `hypothesize()`, `generate()`, `calculate()`, `get_p_value()`, `get_ci()` |
+
+------------------------------------------------------------------------
+
+# Part 1: Get oriented (about 8 minutes)
+
+The wrangling is done for you so we can spend our time on functions. Run the chunk below. It keeps one row per person (the `NHANES` package resamples participants, so some people appear more than once and the rows would not be independent), keeps adults, and creates the grouping variable `age_group`.
+
+```{r adults}
+adults <- NHANES %>%
+  distinct(ID, .keep_all = TRUE) %>%
+  filter(Age >= 18) %>%
+  select(ID, Gender, Age, Race1, Education, BMI, BPSysAve,
+         SleepHrsNight, PhysActive, Diabetes, TotChol) %>%
+  mutate(age_group = case_when(Age < 40 ~ "18-39",
+                               Age < 60 ~ "40-59",
+                               TRUE ~ "60+"))
+```
+
+**1a.** How many adults are in each `age_group`? Then, for each `age_group` and `Gender`, find the number of non-missing `BPSysAve` values and the mean `BPSysAve`.
+
+```{r q1a}
+# your code here
+```
+
+*Your answer:*
+
+**1b.** Look at your table. **Predict:** is the difference between men's and women's mean blood pressure (male minus female) the same in every age group? Write your prediction before you test anything.
+
+*Your answer:*
+
+------------------------------------------------------------------------
+
+# Part 2: One group, by hand (about 10 minutes)
+
+Before writing a function, make sure the code works for **one** group. Use the 18-39 age group. Every plot needs axis labels and a title, with **navy** for male and **orangered** for female.
+
+**2a.** Create `young`: the adults in the `"18-39"` age group with a non-missing `BPSysAve`. Then make side-by-side boxplots of `BPSysAve` by `Gender`.
+
+```{r q2a}
+# your code here
+```
+
+*Your answer:*
+
+**2b.** Use `infer` to test whether men and women in this age group have different mean blood pressure. Write the hypotheses, compute the observed difference (male minus female), build a permutation null distribution (1,000 reps), shade the p-value, and report the p-value.
+
+```{r q2b}
+# your code here
+```
+
+*Your answer:*
+
+**2c.** Add a 95% bootstrap percentile confidence interval for the difference in means and interpret it.
+
+```{r q2c}
+# your code here
+```
+
+*Your answer:*
+
+------------------------------------------------------------------------
+
+# Part 3: Turn it into functions (about 15 minutes)
+
+You just wrote the same plot and test for one group. We need them for three groups (and maybe more later), so instead of copying and pasting, wrap the code in **functions**. A function takes a data frame in and gives a result back. Remember: the code you wrote above becomes the body, and anything that changes (the data) becomes an argument.
+
+**3a.** Write `plot_bp(data, title = "")`, which returns the boxplot from 2a for any data frame with `BPSysAve` and `Gender`, using `title` as the plot title. Test it on `young`.
+
+```{r q3a}
+plot_bp <- function(data, title = "") {
+  # your code here
+}
+
+plot_bp(young, title = "Ages 18-39")
+```
+
+*Your answer:*
+
+**3b.** Write `test_bp(data, reps = 1000)`, which runs the permutation test **and** the bootstrap interval from 2b and 2c and returns a **one-row tibble** with the columns `n`, `obs_diff`, `p_value`, `ci_lower`, and `ci_upper`. Test it on `young`.
+
+```{r q3b}
+test_bp <- function(data, reps = 1000) {
+  # your code here
+}
+
+test_bp(young)
+```
+
+*Your answer:*
+
+**3c.** Test your functions on a **different** group to make sure they are not secretly using `young`: filter `adults` to the `"60+"` age group and run both functions. Does the result match the table you made in 1a?
+
+```{r q3c}
+# your code here
+```
+
+*Your answer:*
+
+------------------------------------------------------------------------
+
+# Part 4: Map the functions over every age group (about 15 minutes)
+
+
+**4a.** Create `by_age` with `group_by(age_group)` and `nest()`. Then add a column `plot` that holds the boxplot for each group, titled with the group name (hint: `map2()`). 
+
+> Display all three plots with `walk(by_age$plot, print)`.
+
+```{r q4a}
+# your code here
+```
+
+*Your answer:*
+
+**4b.** Add a column `result` by mapping `test_bp` over `data`, then `unnest()` it to get one table with one row per age group. Use `set.seed()` before you run it so your results are repeatable.
+
+```{r q4b}
+set.seed(401)
+# your code here
+```
+
+*Your answer:*
+
+**4c.** We just ran three tests, so some "significant" results could occur by chance. Add a column `p_adj` with a Bonferroni adjustment (`p.adjust(p_value, method = "bonferroni")`). Then plot the difference in means for each age group with its confidence interval (`geom_pointrange`) and a dashed line at 0.
+
+```{r q4c}
+# your code here
+```
+
+*Your answer:*
+
+**4d.** Write a short conclusion **in context** about how the blood pressure difference between men and women changes with age. Why is the single pooled difference from the whole sample (about 4.3 mmHg) misleading? Name one reason this is an association and not a cause.
+
+*Your answer:*
+
+------------------------------------------------------------------------
+
+# Part 5: Same idea for a model (about 8 minutes)
+
+Functions work for models too. We will look at whether BMI is associated with blood pressure, **adjusting for gender**, and whether that is the same in every age group.
+
+**5a.** Write `bmi_effect(data)`, which fits `lm(BPSysAve ~ BMI + Gender)` and returns only the row of `tidy(conf.int = TRUE)` for `BMI`, plus a column `n` with the number of rows used. Test it on `young`.
+
+```{r q5a}
+bmi_effect <- function(data) {
+  # your code here
+}
+
+bmi_effect(young)
+```
+
+*Your answer:*
+
+**5b.** Map `bmi_effect` over the age groups, `unnest()` the result, and plot the estimates with their confidence intervals (as in 4c). Interpret the estimate for each group. Does BMI mean the same thing for blood pressure at every age?
+
+```{r q5b}
+# your code here
+```
+
+*Your answer:*
+
+------------------------------------------------------------------------
+
+# Part 6: Reuse your functions (remaining time)
+
+Your functions are only useful if they work somewhere new. Pick **one** of these and finish the job.
+
+**6a.** Option A: Run the same `test_bp` for each `Race1` group instead of each age group (`group_by(Race1)`, `nest()`, `map()`, `unnest()`). Summarize in a sentence which groups show a significant difference and how big the differences are.
+
+```{r q6a}
+# your code here
+```
+
+*Your answer:*
+
+**6b.** Option B: Make a **general** version of your test function that takes the column names as arguments, `compare_groups(data, response, group, order, reps = 1000)`, so it works for any numeric response and any two-level grouping. Use it to test whether people who are physically active (`PhysActive`) sleep a different number of hours (`SleepHrsNight`, `order = c("Yes", "No")`) in **each age group**. Hint: `reformulate(group, response = response)` builds a formula from strings, and `specify(formula = f)` accepts it.
+
+```{r q6b}
+# your code here
+```
+
+*Your answer:*
+
+-----------------------------------------------------------------------
